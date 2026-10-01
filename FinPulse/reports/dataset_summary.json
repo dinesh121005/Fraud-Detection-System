@@ -1,0 +1,142 @@
+{
+  "paysim": {
+    "dataset_name": "PaySim",
+    "total_rows": 100000,
+    "total_columns": 11,
+    "duplicate_rows": 0,
+    "duplicate_percentage": 0.0,
+    "numerical_columns_count": 8,
+    "categorical_columns_count": 3,
+    "columns_with_missing_values_count": 0,
+    "missing_summary": {},
+    "fraud_distribution": {
+      "normal_transactions": 99884,
+      "fraud_transactions": 116,
+      "fraud_percentage": 0.116,
+      "imbalance_ratio": "861.07:1"
+    }
+  },
+  "sparkov": {
+    "dataset_name": "Sparkov",
+    "total_rows": 100000,
+    "total_columns": 23,
+    "duplicate_rows": 0,
+    "duplicate_percentage": 0.0,
+    "numerical_columns_count": 11,
+    "categorical_columns_count": 12,
+    "columns_with_missing_values_count": 0,
+    "missing_summary": {},
+    "fraud_distribution": {
+      "normal_transactions": 99010,
+      "fraud_transactions": 990,
+      "fraud_percentage": 0.99,
+      "imbalance_ratio": "100.01:1"
+    }
+  },
+  "ieee_cis": {
+    "dataset_name": "IEEE-CIS",
+    "total_rows": 100000,
+    "total_columns": 43,
+    "duplicate_rows": 0,
+    "duplicate_percentage": 0.0,
+    "numerical_columns_count": 36,
+    "categorical_columns_count": 7,
+    "columns_with_missing_values_count": 22,
+    "missing_summary": {
+      "card2": {
+        "count": 1354,
+        "percentage": 1.35
+      },
+      "card4": {
+        "count": 7,
+        "percentage": 0.01
+      },
+      "card6": {
+        "count": 4,
+        "percentage": 0.0
+      },
+      "dist1": {
+        "count": 69653,
+        "percentage": 69.65
+      },
+      "P_emaildomain": {
+        "count": 15393,
+        "percentage": 15.39
+      },
+      "R_emaildomain": {
+        "count": 65454,
+        "percentage": 65.45
+      },
+      "D2": {
+        "count": 57633,
+        "percentage": 57.63
+      },
+      "D3": {
+        "count": 56598,
+        "percentage": 56.6
+      },
+      "D4": {
+        "count": 46175,
+        "percentage": 46.18
+      },
+      "D5": {
+        "count": 65327,
+        "percentage": 65.33
+      },
+      "D6": {
+        "count": 87259,
+        "percentage": 87.26
+      },
+      "D7": {
+        "count": 93928,
+        "percentage": 93.93
+      },
+      "D8": {
+        "count": 78289,
+        "percentage": 78.29
+      },
+      "D9": {
+        "count": 78289,
+        "percentage": 78.29
+      },
+      "D10": {
+        "count": 30926,
+        "percentage": 30.93
+      },
+      "D11": {
+        "count": 71208,
+        "percentage": 71.21
+      },
+      "D12": {
+        "count": 89495,
+        "percentage": 89.5
+      },
+      "D13": {
+        "count": 90479,
+        "percentage": 90.48
+      },
+      "D14": {
+        "count": 88847,
+        "percentage": 88.85
+      },
+      "D15": {
+        "count": 34047,
+        "percentage": 34.05
+      },
+      "DeviceType": {
+        "count": 59717,
+        "percentage": 59.72
+      },
+      "DeviceInfo": {
+        "count": 63535,
+        "percentage": 63.54
+      }
+    },
+    "fraud_distribution": {
+      "normal_transactions": 97439,
+      "fraud_transactions": 2561,
+      "fraud_percentage": 2.561,
+      "imbalance_ratio": "38.05:1"
+    }
+  }
+}

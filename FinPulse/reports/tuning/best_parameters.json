@@ -1,0 +1,13 @@
+{
+  "candidate_model": "CatBoost",
+  "best_trial_number": 33,
+  "best_val_pr_auc": 0.7685304492139579,
+  "best_params": {
+    "learning_rate": 0.07636977914554913,
+    "depth": 6,
+    "l2_leaf_reg": 7.816425135445502
+  },
+  "scale_pos_weight": 136.2549019607843,
+  "tuning_dataset": "sparkov",
+  "random_seed": 42
+}

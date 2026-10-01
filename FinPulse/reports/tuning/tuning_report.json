@@ -1,0 +1,31 @@
+{
+  "candidate_model": "CatBoost",
+  "total_trials": 35,
+  "best_score": 0.7685304492139579,
+  "best_trial_id": 33,
+  "best_hyperparameters": {
+    "learning_rate": 0.07636977914554913,
+    "depth": 6,
+    "l2_leaf_reg": 7.816425135445502
+  },
+  "search_space_configured": {
+    "learning_rate": {
+      "type": "float",
+      "low": 0.01,
+      "high": 0.15,
+      "log": true
+    },
+    "depth": {
+      "type": "int",
+      "low": 4,
+      "high": 8
+    },
+    "l2_leaf_reg": {
+      "type": "float",
+      "low": 1.0,
+      "high": 10.0
+    }
+  },
+  "test_set_isolation": "VERIFIED_UNTOUCHED",
+  "study_db": "D:\\Fraud-Detection-System\\FinPulse\\reports\\tuning\\optuna_study.db"
+}

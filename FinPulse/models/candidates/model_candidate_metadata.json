@@ -1,0 +1,18 @@
+{
+  "model": "CatBoost",
+  "feature_count": 32,
+  "feature_schema_version": "2.0",
+  "training_datasets": [
+    "sparkov"
+  ],
+  "training_samples": 21000,
+  "hyperparameter_source": "Optuna",
+  "best_hyperparameters": {
+    "learning_rate": 0.07636977914554913,
+    "depth": 6,
+    "l2_leaf_reg": 7.816425135445502
+  },
+  "fit_time_seconds": 2.39,
+  "random_seed": 42,
+  "timestamp": "2026-10-01T04:04:31Z"
+}

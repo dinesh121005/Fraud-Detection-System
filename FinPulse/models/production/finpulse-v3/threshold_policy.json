@@ -1,0 +1,19 @@
+{
+  "review_threshold": 0.158,
+  "block_threshold": 0.5516,
+  "tau_review": 0.158,
+  "tau_block": 0.5516,
+  "optimization_metric": "precision_recall_constraint",
+  "validation_target_fpr": 0.01,
+  "validation_min_block_precision": 0.85,
+  "operational_results": {
+    "validation_fpr_at_review": 0.00791,
+    "validation_precision_at_block": 0.85714,
+    "tier_distribution": {
+      "approved_pct": 97.93,
+      "reviewed_pct": 0.98,
+      "blocked_pct": 1.09
+    }
+  },
+  "test_isolation": "VERIFIED_UNTOUCHED"
+}

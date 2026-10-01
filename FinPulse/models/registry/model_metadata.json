@@ -1,0 +1,34 @@
+{
+  "model_name": "finpulse-random-forest-prod",
+  "model_version": "2.0.0",
+  "git_commit": "83f39f5",
+  "registration_timestamp": "2026-09-30T17:17:24Z",
+  "status": "PRODUCTION",
+  "datasets": [
+    "PaySim",
+    "Sparkov",
+    "IEEE-CIS"
+  ],
+  "feature_schema_version": "v2.0",
+  "feature_count": 32,
+  "metrics": {
+    "pr_auc": 0.5902,
+    "roc_auc": 0.9928,
+    "recall_at_fpr_1pct": 0.7647,
+    "precision": 0.3125,
+    "recall": 0.7843,
+    "f1": 0.4469,
+    "brier_score": 0.0111
+  },
+  "calibration": {
+    "method": "isotonic",
+    "raw_brier": 0.01112,
+    "calibrated_brier": 0.00392,
+    "improvement": 0.00719
+  },
+  "thresholds": {
+    "tau_review": 0.05,
+    "tau_block": 0.9
+  },
+  "latency_ms": 0.005
+}

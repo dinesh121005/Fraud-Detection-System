@@ -1,0 +1,84 @@
+{
+  "feature_schema_version": "2.0",
+  "feature_count": 32,
+  "feature_names": [
+    "amount",
+    "log_amount",
+    "payment_type_enc",
+    "merchant_category_enc",
+    "amount_to_balance_ratio",
+    "hour_of_day",
+    "day_of_week",
+    "is_weekend",
+    "is_night",
+    "cyclic_hour_sin",
+    "cyclic_hour_cos",
+    "tx_count_1m",
+    "tx_count_5m",
+    "tx_count_15m",
+    "tx_count_1h",
+    "amount_sum_5m",
+    "amount_sum_15m",
+    "amount_sum_1h",
+    "user_avg_amount_30d",
+    "user_std_amount_30d",
+    "amount_zscore",
+    "user_category_frequency",
+    "user_hourly_tx_deviation",
+    "distance_from_home_km",
+    "distance_from_prev_loc_km",
+    "speed_kmh_from_prev_tx",
+    "is_new_device",
+    "is_new_location",
+    "device_user_count_24h",
+    "auth_factor_verified",
+    "deterministic_rule_count",
+    "isolation_forest_score"
+  ],
+  "feature_groups": {
+    "group_a_transaction": [
+      "amount",
+      "log_amount",
+      "payment_type_enc",
+      "merchant_category_enc",
+      "amount_to_balance_ratio"
+    ],
+    "group_b_temporal": [
+      "hour_of_day",
+      "day_of_week",
+      "is_weekend",
+      "is_night",
+      "cyclic_hour_sin",
+      "cyclic_hour_cos"
+    ],
+    "group_c_velocity": [
+      "tx_count_1m",
+      "tx_count_5m",
+      "tx_count_15m",
+      "tx_count_1h",
+      "amount_sum_5m",
+      "amount_sum_15m",
+      "amount_sum_1h"
+    ],
+    "group_d_behavioral": [
+      "user_avg_amount_30d",
+      "user_std_amount_30d",
+      "amount_zscore",
+      "user_category_frequency",
+      "user_hourly_tx_deviation"
+    ],
+    "group_e_context_location": [
+      "distance_from_home_km",
+      "distance_from_prev_loc_km",
+      "speed_kmh_from_prev_tx",
+      "is_new_device",
+      "is_new_location",
+      "device_user_count_24h"
+    ],
+    "group_f_anomaly_rule": [
+      "auth_factor_verified",
+      "deterministic_rule_count",
+      "isolation_forest_score"
+    ]
+  }
+}

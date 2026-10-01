@@ -1,222 +1,68 @@
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MPR Snacks - Authentic Kovilpatti Mittai</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
-    <style>
-        body {
-            font-family: 'Inter', sans-serif;
-            scroll-behavior: smooth;
-        }
-        .hero-gradient {
-            background: linear-gradient(to top, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0.3) 60%, rgba(0,0,0,0) 100%);
-        }
-        .section-title {<!DOCTYPE html>
-            font-family: 'Inter', sans-serif;
-            font-weight: 800;
-        }
-        .highlight-c {
-            color: #F97316; /* Tailwind orange-500 */
-        }
-    </style>
-</head>
-<body class="bg-gray-100 text-gray-800">
+version: '3.8'
 
-    <!-- Header / Navigation -->
-    <header class="bg-white shadow-md sticky top-0 z-50">
-        <nav class="container mx-auto px-6 py-4 flex justify-between items-center">
-            <div class="text-2xl font-bold text-gray-800">
-                <span class="highlight-c">MPR</span> Snacks
-            </div>
-            <div class="flex space-x-4">
-                <a href="#home" class="text-gray-600 hover:text-orange-600 font-medium">Home</a>
-                <a href="#products" class="text-gray-600 hover:text-orange-600 font-medium">Products</a>
-                <a href="#services" class="text-gray-600 hover:text-orange-600 font-medium">Services</a>
-                <a href="#contact" class="text-gray-600 hover:text-orange-600 font-medium">Contact</a>
-            </div>
-        </nav>
-    </header>
+services:
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.4.0
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    ports:
+      - "2181:2181"
 
-    <!-- Main Content -->
-    <main>
+  kafka:
+    image: confluentinc/cp-kafka:7.4.0
+    depends_on:
+      - zookeeper
+    ports:
+      - "9092:9092"
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092,PLAINTEXT_INTERNAL://kafka:29092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_INTERNAL:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT_INTERNAL
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
 
-        <!-- Hero Section -->
-        <section id="home" class="relative min-h-[70vh] flex bg-white text-gray-800">
-            <!-- Left Side - Text Content -->
-            <div class="w-full lg:w-1/2 flex items-center justify-center p-8 md:p-12">
-                <div class="max-w-md text-center lg:text-left">
-                    <span class="block uppercase text-orange-600 font-semibold tracking-wider mb-2">Owned by Mari Selvam</span>
-                    <h1 class="text-4xl md:text-6xl font-extrabold mb-4 text-gray-900">
-                        Authentic Kovilpatti Snacks
-                    </h1>
-                    <p class="text-lg md:text-xl text-gray-600 mb-8">
-                        Fresh from <span class="font-semibold">MPR Snacks</span>. We deliver tradition in every bite.
-                    </p>
-                    <a href="tel:9965425056" class="bg-orange-600 hover:bg-orange-700 text-white font-bold py-3 px-8 rounded-full text-lg transition duration-300 shadow-xl inline-block">
-                        Call to Order: 99654 25056
-                    </a>
-                </div>
-            </div>
-            
-            <!-- Right Side - Image -->
-            <div class="hidden lg:block lg:w-1/2 relative">
-                <img src="https://placehold.co/800x900/f97316/white?text=Kadalai+Mittai&font=inter" 
-                     alt="Delicious Kovilpatti Mittai" 
-                     class="absolute inset-0 w-full h-full object-cover"
-                     onerror="this.src='https://placehold.co/800x900/f97316/white?text=MPR+Snacks&font=inter'">
-            </div>
-        </section>
+  redis:
+    image: redis:7.2-alpine
+    ports:
+      - "6379:6379"
+    command: redis-server --appendonly yes
 
-        <!-- Products Section -->
-        <section id="products" class="py-20 bg-white">
-            <div class="container mx-auto px-6 text-center">
-                <h2 class="text-4xl section-title mb-4">Our Products</h2>
-                <p class="text-lg text-gray-600 mb-12 max-w-2xl mx-auto">
-                    We use only the best ingredients to make our famous Kovilpatti mittai.
-                </p>
-                
-                <!-- Product Grid -->
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-                    
-                    <!-- Kadalai Mittai Card -->
-                    <div class="bg-gray-50 rounded-lg shadow-lg overflow-hidden border border-gray-200 transform hover:scale-105 hover:shadow-xl transition duration-300">
-                        <img src="https://placehold.co/600x400/f97316/white?text=Kadalai+Mittai&font=inter" alt="Kadalai Mittai" class="w-full h-48 object-cover" onerror="this.src='https://placehold.co/600x400/f97316/white?text=Kadalai+Mittai&font=inter'">
-                        <div class="p-6">
-                            <h3 class="text-2xl font-bold mb-2">Kadalai Mittai</h3>
-                            <p class="text-gray-600 mb-4">(Peanut Chikki)</p>
-                            <!-- Price Highlight -->
-                            <div class="bg-orange-100 text-orange-700 font-bold py-2 px-4 rounded-full inline-block">
-                                200gm for ₹40
-                            </div>
-                        </div>
-                    </div>
+  finpulse-api:
+    build:
+      context: .
+      dockerfile: Dockerfile.serving
+    ports:
+      - "8000:8000"
+    environment:
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+    depends_on:
+      - redis
 
-                    <!-- Ellu Mittai Card -->
-                    <div class="bg-gray-50 rounded-lg shadow-lg overflow-hidden border border-gray-200 transform hover:scale-105 hover:shadow-xl transition duration-300">
-                        <img src="https://placehold.co/600x400/f97316/white?text=Ellu+Mittai&font=inter" alt="Ellu Mittai" class="w-full h-48 object-cover" onerror="this.src='https://placehold.co/600x400/f97316/white?text=Ellu+Mittai&font=inter'">
-                        <div class="p-6">
-                            <h3 class="text-2xl font-bold mb-2">Ellu Mittai</h3>
-                            <p class="text-gray-600 mb-4">(Sesame Chikki)</p>
-                            <!-- Price Highlight -->
-                            <div class="bg-orange-100 text-orange-700 font-bold py-2 px-4 rounded-full inline-block">
-                                200gm for ₹40
-                            </div>
-                        </div>
-                    </div>
+  streaming-worker:
+    build:
+      context: .
+      dockerfile: Dockerfile.streaming
+    environment:
+      KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+    depends_on:
+      - kafka
+      - redis
+      - finpulse-api
 
-                    <!-- Koko Mittai Card -->
-                    <div class="bg-gray-50 rounded-lg shadow-lg overflow-hidden border border-gray-200 transform hover:scale-105 hover:shadow-xl transition duration-300">
-                        <img src="https://placehold.co/600x400/f97316/white?text=Koko+Mittai&font=inter" alt="Koko Mittai" class="w-full h-48 object-cover" onerror="this.src='https://placehold.co/600x400/f97316/white?text=Koko+Mittai&font=inter'">
-                        <div class="p-6">
-                            <h3 class="text-2xl font-bold mb-2">Koko Mittai</h3>
-                            <p class="text-gray-600 mb-4">(Coconut Chikki)</p>
-                            <!-- Price Highlight -->
-                            <div class="bg-orange-100 text-orange-700 font-bold py-2 px-4 rounded-full inline-block">
-                                200gm for ₹40
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- Services Section -->
-        <section id="services" class="py-20 bg-gray-100">
-            <div class="container mx-auto px-6 text-center">
-                <h2 class="text-4xl section-title mb-4">Our Services</h2>
-                <p class="text-lg text-gray-600 mb-12 max-w-2xl mx-auto">
-                    We cater to all your needs, from small personal orders to large distributions.
-                </p>
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto">
-                    
-                    <!-- Service Card 1 -->
-                    <div class="bg-white p-8 rounded-lg shadow-md border border-gray-200 text-center transform hover:scale-105 hover:shadow-xl transition duration-300">
-                        <!-- Icon Placeholder -->
-                        <svg class="w-12 h-12 text-orange-600 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5V8a2 2 0 00-2-2h-5l-2-4H9L7 6H2a2 2 0 00-2 2v10a2 2 0 002 2h5m10 0a2 2 0 01-2 2H9a2 2 0 01-2-2m10 0v-2m-10 2v-2"></path></svg>
-                        <h3 class="text-2xl font-bold mb-3 highlight-c">Big & Small Distributors</h3>
-                        <p class="text-gray-700">
-                            We supply to all types of distributors. Whether you are a large wholesaler or a small local shop, we can provide you with fresh stock.
-                        </p>
-                    </div>
-
-                    <!-- Service Card 2 -->
-                    <div class="bg-white p-8 rounded-lg shadow-md border border-gray-200 text-center transform hover:scale-105 hover:shadow-xl transition duration-300">
-                        <!-- Icon Placeholder -->
-                        <svg class="w-12 h-12 text-orange-600 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.534 4.736a1 1 0 00.95.69h4.99c.969 0 1.371 1.24.588 1.81l-4.036 2.928a1 1 0 00-.364 1.118l1.534 4.736c.3.921-.755 1.688-1.54 1.118l-4.036-2.928a1 1 0 00-1.176 0l-4.036 2.928c-.784.57-1.838-.197-1.54-1.118l1.534-4.736a1 1 0 00-.364-1.118L2.05 10.163c-.783-.57-.38-1.81.588-1.81h4.99a1 1 0 00.95-.69l1.534-4.736z"></path></svg>
-                        <h3 class="text-2xl font-bold mb-3 highlight-c">Customised Making</h3>
-                        <p class="text-gray-700">
-                            Have a special request? We offer customised making for bulk orders. Perfect for functions, festivals, and corporate gifts.
-                        </p>
-                    </div>
-
-                    <!-- Service Card 3 -->
-                    <div class="bg-white p-8 rounded-lg shadow-md border border-gray-200 text-center transform hover:scale-105 hover:shadow-xl transition duration-300">
-                        <!-- Icon Placeholder -->
-                        <svg class="w-12 h-12 text-orange-600 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"></path></svg>
-                        <h3 class="text-2xl font-bold mb-3 highlight-c">Reliable & Fresh Supply</h3>
-                        <p class="text-gray-700">
-                            We pride ourselves on a reliable supply chain, ensuring you get the freshest snacks delivered on time, every time.
-                        </D>
-                    </div>
-
-                </div>
-            </div>
-        </section>
-
-        <!-- Contact Section -->
-        <section id="contact" class="py-20 bg-gray-800 text-white">
-            <div class="container mx-auto px-6 text-center">
-                <h2 class="text-4xl section-title mb-4">Contact Us</h2>
-                <p class="text-lg text-gray-300 mb-12 max-w-2xl mx-auto">
-                    Get in touch with the owner, Mari Selvam, to place your order or for any inquiries.
-                </P>
-
-                <div class="max-w-4xl mx-auto text-left grid grid-cols-1 md:grid-cols-2 gap-12 bg-gray-700 p-8 md:p-12 rounded-lg shadow-xl">
-                    <!-- Contact Info -->
-                    <div>
-                        <h3 class="text-2xl font-bold mb-4 text-orange-400">Owner</h3>
-                        <p class="text-xl mb-6">Mari Selvam</p>
-                        
-                        <h3 class="text-2xl font-bold mb-4 text-orange-400">Call for Orders</h3>
-                        <a href="tel:9965425056" class="bg-orange-600 hover:bg-orange-700 text-white font-bold py-3 px-8 rounded-full text-lg transition duration-300 shadow-xl inline-block">
-                            Call: 99654 25056
-                        </a>
-                    </div>
-                    
-                    <!-- Address -->
-                    <div>
-                        <h3 class="text-2xl font-bold mb-4 text-orange-400">Factory Address</h3>
-                        <p class="text-xl leading-relaxed">
-                            MPR Snacks
-                            <br>
-                            Ramasamy Street
-                            <br>
-                            Kovilpatti, Tamil Nadu
-                            <br>
-                            638501
-                        </p>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-    </main>
-
-    <!-- Footer -->
-    <footer class="bg-gray-900 text-gray-400 py-8">
-        <div class="container mx-auto px-6 text-center">
-            <p>&copy; <span id="year"></span> MPR Snacks. All Rights Reserved.</p>
-            <p class="text-sm mt-2">Authentic Kovilpatti Mittai</p>
-        </div>
-    </footer>
-
-    <script>
-        // Set current year in footer
-        document.getElementById('year').textContent = new Date().getFullYear();
-    </script>
-
-</body>
-</html>
-
+  dashboard:
+    build:
+      context: .
+      dockerfile: Dockerfile.dashboard
+    ports:
+      - "8501:8501"
+    environment:
+      API_URL: http://finpulse-api:8000
+      REDIS_HOST: redis
+    depends_on:
+      - finpulse-api

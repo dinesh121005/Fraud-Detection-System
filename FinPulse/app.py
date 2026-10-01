@@ -102,8 +102,17 @@ model_path = "models/fraud_model.json"
 le_path = "models/label_encoder.pkl"
 
 model = XGBClassifier()
-model.load_model(model_path)
-le = joblib.load(le_path)
+if os.path.exists(model_path):
+    model.load_model(model_path)
+le = joblib.load(le_path) if os.path.exists(le_path) else None
+
+# Redesigned ML Subsystem Predictor
+try:
+    from src.serving.predictor import ProductionPredictor
+    artifacts_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "models", "artifacts")
+    redesigned_predictor = ProductionPredictor(artifacts_dir)
+except Exception as e:
+    redesigned_predictor = None
 
 # -----------------------
 # Initialize Kafka Producer
@@ -243,8 +252,38 @@ def convert_to_native_types(d):
 def process_transaction_dict(tx):
     tx["isFlaggedFraud"] = 0
     orig_type = str(tx.get("type", "TRANSFER"))
+
+    # If redesigned ML subsystem is active, evaluate via hybrid risk engine
+    if redesigned_predictor is not None:
+        try:
+            req_dict = {
+                "transaction_id": f"tx_ui_{int(time.time()*1000)}",
+                "timestamp": float(time.time()),
+                "amount": float(tx.get("amount", 0.0)),
+                "customer_id": f"cust_{tx.get('sender', 'user')}",
+                "merchant_id": f"merch_{tx.get('receiver', 'dest')}",
+                "category": "general",
+                "payment_type": orig_type,
+                "origin_balance": float(tx.get("oldbalanceOrg", 0.0)),
+                "device_id": "dev_ui_client",
+                "auth_verified": bool(tx.get("auth_verified", 1))
+            }
+            res = redesigned_predictor.predict(req_dict)
+            tx["type"] = orig_type
+            tx["isFraud"] = 1 if res["decision"] == "BLOCK" else 0
+            tx["Fraud_Prob"] = res["fraud_probability"]
+            tx["heuristic_risk"] = res["signals"]["rule_risk"]
+            tx["isFraudFinal"] = 1 if res["decision"] in ["BLOCK", "REVIEW"] else 0
+            tx["status"] = "🚨 BLOCKED" if res["decision"] == "BLOCK" else ("⚠️ REVIEW" if res["decision"] == "REVIEW" else "✅ APPROVED")
+            tx["reasons"] = res["top_reasons"]
+            X = preprocess_transaction(tx)
+            return tx, X, res["top_reasons"]
+        except Exception:
+            pass
+
+    # Baseline fallback evaluation
     try:
-        tx_type_enc = le.transform([orig_type])[0]
+        tx_type_enc = le.transform([orig_type])[0] if le else 0
         tx["type"] = int(tx_type_enc)
     except Exception:
         tx["type"] = -1

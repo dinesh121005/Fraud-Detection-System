@@ -1,0 +1,107 @@
+# FinPulse Common Feature Engineering Layer Specification
+feature_schema:
+  version: "2.0.0"
+  target: "is_fraud"
+
+  transaction_features:
+    - name: "amount"
+      type: "float"
+      description: "Transaction amount in native currency units"
+    - name: "log_amount"
+      type: "float"
+      description: "log1p of transaction amount"
+    - name: "payment_type_enc"
+      type: "int"
+      description: "Encoded payment type (TRANSFER, CASH_OUT, PAYMENT, DEBIT, CASH_IN)"
+    - name: "merchant_category_enc"
+      type: "int"
+      description: "Frequency/Target encoded merchant category"
+    - name: "amount_to_balance_ratio"
+      type: "float"
+      description: "amount / (origin_balance + 1e-5)"
+
+  temporal_features:
+    - name: "hour_of_day"
+      type: "int"
+      range: [0, 23]
+    - name: "day_of_week"
+      type: "int"
+      range: [0, 6]
+    - name: "is_weekend"
+      type: "int"
+      values: [0, 1]
+    - name: "is_night"
+      type: "int"
+      description: "1 if hour in [22, 23, 0, 1, 2, 3, 4, 5], else 0"
+    - name: "cyclic_hour_sin"
+      type: "float"
+    - name: "cyclic_hour_cos"
+      type: "float"
+    - name: "time_since_last_tx_sec"
+      type: "float"
+      default: 86400.0
+
+  velocity_features:
+    windows_seconds:
+      - 60     # 1 minute
+      - 300    # 5 minutes
+      - 900    # 15 minutes
+      - 3600   # 1 hour
+    features:
+      - name: "tx_count_1m"
+        type: "int"
+      - name: "tx_count_5m"
+        type: "int"
+      - name: "tx_count_15m"
+        type: "int"
+      - name: "tx_count_1h"
+        type: "int"
+      - name: "amount_sum_5m"
+        type: "float"
+      - name: "amount_sum_15m"
+        type: "float"
+      - name: "amount_sum_1h"
+        type: "float"
+
+  behavioral_features:
+    - name: "user_avg_amount_30d"
+      type: "float"
+    - name: "user_std_amount_30d"
+      type: "float"
+    - name: "amount_zscore"
+      type: "float"
+      bounds: [-5.0, 10.0]
+    - name: "user_category_frequency"
+      type: "float"
+    - name: "user_hourly_tx_deviation"
+      type: "float"
+
+  context_location_features:
+    - name: "distance_from_home_km"
+      type: "float"
+      default: 0.0
+    - name: "distance_from_prev_loc_km"
+      type: "float"
+      default: 0.0
+    - name: "speed_kmh_from_prev_tx"
+      type: "float"
+      default: 0.0
+    - name: "is_new_device"
+      type: "int"
+      values: [0, 1]
+    - name: "is_new_location"
+      type: "int"
+      values: [0, 1]
+    - name: "device_user_count_24h"
+      type: "int"
+      default: 1
+
+  anomaly_features:
+    - name: "isolation_forest_score"
+      type: "float"
+      range: [0.0, 1.0]
+    - name: "auth_factor_verified"
+      type: "int"
+      values: [0, 1]
+    - name: "deterministic_rule_count"
+      type: "int"

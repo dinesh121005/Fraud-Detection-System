@@ -1,0 +1,25 @@
+{
+  "candidate_model": "CatBoost",
+  "dataset": "sparkov",
+  "selected_method": "platt",
+  "metrics": {
+    "uncalibrated": {
+      "brier_score": 0.00489,
+      "ece": 0.00391
+    },
+    "isotonic": {
+      "brier_score": 0.00771,
+      "ece": 0.0105
+    },
+    "platt": {
+      "brier_score": 0.00649,
+      "ece": 0.00992
+    }
+  },
+  "brier_improvement": -0.0016,
+  "test_isolation": "VERIFIED_UNTOUCHED",
+  "artifacts": {
+    "model": "D:\\Fraud-Detection-System\\FinPulse\\models\\candidates\\finpulse_model.pkl",
+    "calibrator": "D:\\Fraud-Detection-System\\FinPulse\\models\\candidates\\finpulse_calibrator.pkl"
+  }
+}

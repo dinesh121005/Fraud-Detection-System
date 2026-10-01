@@ -1,0 +1,105 @@
+{
+  "dataset": "PaySim",
+  "train_size": 21000,
+  "val_size": 4500,
+  "train_fraud": 81,
+  "val_fraud": 2,
+  "scale_pos_weight": 258.26,
+  "models": {
+    "Logistic Regression": {
+      "pr_auc": 0.7917,
+      "roc_auc": 0.9999,
+      "recall_at_fpr_1pct": 1.0,
+      "precision": 0.1818,
+      "recall": 1.0,
+      "f1": 0.3077,
+      "fpr": 0.002,
+      "fnr": 0.0,
+      "brier_score": 0.0093,
+      "confusion_matrix": {
+        "true_negatives": 4489,
+        "false_positives": 9,
+        "false_negatives": 0,
+        "true_positives": 2
+      },
+      "latency_ms": 0.0007,
+      "fit_time_sec": 0.2
+    },
+    "Random Forest": {
+      "pr_auc": 1.0,
+      "roc_auc": 1.0,
+      "recall_at_fpr_1pct": 1.0,
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "fpr": 0.0,
+      "fnr": 1.0,
+      "brier_score": 0.0002,
+      "confusion_matrix": {
+        "true_negatives": 4498,
+        "false_positives": 0,
+        "false_negatives": 2,
+        "true_positives": 0
+      },
+      "latency_ms": 0.0215,
+      "fit_time_sec": 0.64
+    },
+    "XGBoost": {
+      "pr_auc": 0.0607,
+      "roc_auc": 0.9967,
+      "recall_at_fpr_1pct": 1.0,
+      "precision": 0.1,
+      "recall": 1.0,
+      "f1": 0.1818,
+      "fpr": 0.004,
+      "fnr": 0.0,
+      "brier_score": 0.0029,
+      "confusion_matrix": {
+        "true_negatives": 4480,
+        "false_positives": 18,
+        "false_negatives": 0,
+        "true_positives": 2
+      },
+      "latency_ms": 0.0018,
+      "fit_time_sec": 2.59
+    },
+    "LightGBM": {
+      "pr_auc": 1.0,
+      "roc_auc": 1.0,
+      "recall_at_fpr_1pct": 1.0,
+      "precision": 0.125,
+      "recall": 1.0,
+      "f1": 0.2222,
+      "fpr": 0.0031,
+      "fnr": 0.0,
+      "brier_score": 0.0028,
+      "confusion_matrix": {
+        "true_negatives": 4484,
+        "false_positives": 14,
+        "false_negatives": 0,
+        "true_positives": 2
+      },
+      "latency_ms": 0.0036,
+      "fit_time_sec": 3.01
+    },
+    "CatBoost": {
+      "pr_auc": 1.0,
+      "roc_auc": 1.0,
+      "recall_at_fpr_1pct": 1.0,
+      "precision": 0.1176,
+      "recall": 1.0,
+      "f1": 0.2105,
+      "fpr": 0.0033,
+      "fnr": 0.0,
+      "brier_score": 0.0034,
+      "confusion_matrix": {
+        "true_negatives": 4483,
+        "false_positives": 15,
+        "false_negatives": 0,
+        "true_positives": 2
+      },
+      "latency_ms": 0.0026,
+      "fit_time_sec": 3.4
+    }
+  }
+}

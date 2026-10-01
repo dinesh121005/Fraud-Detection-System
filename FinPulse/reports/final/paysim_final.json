@@ -1,0 +1,44 @@
+{
+  "dataset": "PaySim",
+  "test_sample_size": 4500,
+  "fraud_count": 1,
+  "fraud_rate_pct": 0.022,
+  "metrics": {
+    "pr_auc": 0.0002,
+    "roc_auc": 0.5218,
+    "recall_at_fpr_1pct": 0.0,
+    "precision": 0.0,
+    "recall": 0.0,
+    "f1": 0.0,
+    "fpr": 0.0036,
+    "fnr": 1.0,
+    "brier_score": 0.0171,
+    "confusion_matrix": {
+      "true_negatives": 4483,
+      "false_positives": 16,
+      "false_negatives": 1,
+      "true_positives": 0
+    },
+    "expected_calibration_error": 0.11954,
+    "latency_ms": 0.0009
+  },
+  "operational_tiers": {
+    "approved": {
+      "count": 4484,
+      "pct": 99.64,
+      "fraud_missed": 1
+    },
+    "reviewed": {
+      "count": 14,
+      "pct": 0.31,
+      "fraud_caught": 0
+    },
+    "blocked": {
+      "count": 2,
+      "pct": 0.04,
+      "fraud_caught": 0
+    },
+    "overall_fraud_detection_rate_pct": 0.0
+  },
+  "is_in_domain": false
+}

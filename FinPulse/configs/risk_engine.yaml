@@ -1,0 +1,31 @@
+# Hybrid Risk Engine Fusion and Decision Thresholds
+risk_engine:
+  version: "2.0.0"
+  
+  # Empirical signal weights (sum to 1.0)
+  weights:
+    w_ml: 0.45          # Calibrated supervised gradient boosting probability
+    w_anomaly: 0.15     # Unsupervised Isolation Forest score
+    w_velocity: 0.15    # Multi-window velocity escalation score
+    w_behavioral: 0.15  # Historical profile deviation (z-score, new device/loc)
+    w_rules: 0.10       # Heuristic business rule violations
+
+  # Decision Policy Operating Boundaries (Risk Score: 0 to 100)
+  thresholds:
+    tau_review: 30.0    # Score < 30.0 -> APPROVE; >= 30.0 -> REVIEW
+    tau_block: 70.0     # Score >= 70.0 -> BLOCK
+
+  # Deterministic Hard Overrides (Bypass ML when hard threshold breached)
+  hard_overrides:
+    zero_balance_drain:
+      min_amount: 10000.0
+      action: "BLOCK"
+      penalty: 1.0
+    impossible_travel_speed_kmh:
+      max_speed: 800.0
+      action: "BLOCK"
+      penalty: 1.0
+    velocity_spike_1m:
+      max_tx_count: 5
+      action: "REVIEW"
+      penalty: 0.5

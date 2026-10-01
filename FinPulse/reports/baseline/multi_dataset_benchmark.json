@@ -1,0 +1,368 @@
+{
+  "timestamp": "2026-10-01T04:01:12Z",
+  "datasets": {
+    "paysim": "PaySim",
+    "sparkov": "Sparkov",
+    "ieee_cis": "IEEE-CIS"
+  },
+  "models": [
+    "Logistic Regression",
+    "Random Forest",
+    "XGBoost",
+    "LightGBM",
+    "CatBoost"
+  ],
+  "aggregate_pr_auc": {
+    "IEEE-CIS": {
+      "Logistic Regression": 0.0455,
+      "Random Forest": 0.0885,
+      "XGBoost": 0.0632,
+      "LightGBM": 0.063,
+      "CatBoost": 0.0904
+    },
+    "PaySim": {
+      "Logistic Regression": 0.7917,
+      "Random Forest": 1.0,
+      "XGBoost": 0.0607,
+      "LightGBM": 1.0,
+      "CatBoost": 1.0
+    },
+    "Sparkov": {
+      "Logistic Regression": 0.3765,
+      "Random Forest": 0.6283,
+      "XGBoost": 0.6878,
+      "LightGBM": 0.6522,
+      "CatBoost": 0.7201
+    },
+    "Mean PR-AUC": {
+      "Logistic Regression": 0.4046,
+      "Random Forest": 0.5723,
+      "XGBoost": 0.2706,
+      "LightGBM": 0.5717,
+      "CatBoost": 0.6035
+    }
+  },
+  "aggregate_latency_ms": {
+    "IEEE-CIS": {
+      "Logistic Regression": 0.0007,
+      "Random Forest": 0.0195,
+      "XGBoost": 0.0012,
+      "LightGBM": 0.0038,
+      "CatBoost": 0.0019
+    },
+    "PaySim": {
+      "Logistic Regression": 0.0007,
+      "Random Forest": 0.0215,
+      "XGBoost": 0.0018,
+      "LightGBM": 0.0036,
+      "CatBoost": 0.0026
+    },
+    "Sparkov": {
+      "Logistic Regression": 0.0007,
+      "Random Forest": 0.0178,
+      "XGBoost": 0.0013,
+      "LightGBM": 0.0034,
+      "CatBoost": 0.0018
+    },
+    "Mean Latency (ms)": {
+      "Logistic Regression": 0.0007,
+      "Random Forest": 0.0196,
+      "XGBoost": 0.0014,
+      "LightGBM": 0.0036,
+      "CatBoost": 0.0021
+    }
+  },
+  "detailed_results": {
+    "paysim": {
+      "Logistic Regression": {
+        "pr_auc": 0.7917,
+        "roc_auc": 0.9999,
+        "recall_at_fpr_1pct": 1.0,
+        "precision": 0.1818,
+        "recall": 1.0,
+        "f1": 0.3077,
+        "fpr": 0.002,
+        "fnr": 0.0,
+        "brier_score": 0.0093,
+        "confusion_matrix": {
+          "true_negatives": 4489,
+          "false_positives": 9,
+          "false_negatives": 0,
+          "true_positives": 2
+        },
+        "latency_ms": 0.0007,
+        "fit_time_sec": 0.2
+      },
+      "Random Forest": {
+        "pr_auc": 1.0,
+        "roc_auc": 1.0,
+        "recall_at_fpr_1pct": 1.0,
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0,
+        "fpr": 0.0,
+        "fnr": 1.0,
+        "brier_score": 0.0002,
+        "confusion_matrix": {
+          "true_negatives": 4498,
+          "false_positives": 0,
+          "false_negatives": 2,
+          "true_positives": 0
+        },
+        "latency_ms": 0.0215,
+        "fit_time_sec": 0.64
+      },
+      "XGBoost": {
+        "pr_auc": 0.0607,
+        "roc_auc": 0.9967,
+        "recall_at_fpr_1pct": 1.0,
+        "precision": 0.1,
+        "recall": 1.0,
+        "f1": 0.1818,
+        "fpr": 0.004,
+        "fnr": 0.0,
+        "brier_score": 0.0029,
+        "confusion_matrix": {
+          "true_negatives": 4480,
+          "false_positives": 18,
+          "false_negatives": 0,
+          "true_positives": 2
+        },
+        "latency_ms": 0.0018,
+        "fit_time_sec": 2.59
+      },
+      "LightGBM": {
+        "pr_auc": 1.0,
+        "roc_auc": 1.0,
+        "recall_at_fpr_1pct": 1.0,
+        "precision": 0.125,
+        "recall": 1.0,
+        "f1": 0.2222,
+        "fpr": 0.0031,
+        "fnr": 0.0,
+        "brier_score": 0.0028,
+        "confusion_matrix": {
+          "true_negatives": 4484,
+          "false_positives": 14,
+          "false_negatives": 0,
+          "true_positives": 2
+        },
+        "latency_ms": 0.0036,
+        "fit_time_sec": 3.01
+      },
+      "CatBoost": {
+        "pr_auc": 1.0,
+        "roc_auc": 1.0,
+        "recall_at_fpr_1pct": 1.0,
+        "precision": 0.1176,
+        "recall": 1.0,
+        "f1": 0.2105,
+        "fpr": 0.0033,
+        "fnr": 0.0,
+        "brier_score": 0.0034,
+        "confusion_matrix": {
+          "true_negatives": 4483,
+          "false_positives": 15,
+          "false_negatives": 0,
+          "true_positives": 2
+        },
+        "latency_ms": 0.0026,
+        "fit_time_sec": 3.4
+      }
+    },
+    "sparkov": {
+      "Logistic Regression": {
+        "pr_auc": 0.3765,
+        "roc_auc": 0.9008,
+        "recall_at_fpr_1pct": 0.5479,
+        "precision": 0.2044,
+        "recall": 0.7671,
+        "f1": 0.3228,
+        "fpr": 0.0492,
+        "fnr": 0.2329,
+        "brier_score": 0.0447,
+        "confusion_matrix": {
+          "true_negatives": 4209,
+          "false_positives": 218,
+          "false_negatives": 17,
+          "true_positives": 56
+        },
+        "latency_ms": 0.0007,
+        "fit_time_sec": 0.14
+      },
+      "Random Forest": {
+        "pr_auc": 0.6283,
+        "roc_auc": 0.9708,
+        "recall_at_fpr_1pct": 0.6712,
+        "precision": 0.7778,
+        "recall": 0.3836,
+        "f1": 0.5138,
+        "fpr": 0.0018,
+        "fnr": 0.6164,
+        "brier_score": 0.0093,
+        "confusion_matrix": {
+          "true_negatives": 4419,
+          "false_positives": 8,
+          "false_negatives": 45,
+          "true_positives": 28
+        },
+        "latency_ms": 0.0178,
+        "fit_time_sec": 0.73
+      },
+      "XGBoost": {
+        "pr_auc": 0.6878,
+        "roc_auc": 0.968,
+        "recall_at_fpr_1pct": 0.7123,
+        "precision": 0.8293,
+        "recall": 0.4658,
+        "f1": 0.5965,
+        "fpr": 0.0016,
+        "fnr": 0.5342,
+        "brier_score": 0.0089,
+        "confusion_matrix": {
+          "true_negatives": 4420,
+          "false_positives": 7,
+          "false_negatives": 39,
+          "true_positives": 34
+        },
+        "latency_ms": 0.0013,
+        "fit_time_sec": 0.52
+      },
+      "LightGBM": {
+        "pr_auc": 0.6522,
+        "roc_auc": 0.9618,
+        "recall_at_fpr_1pct": 0.6712,
+        "precision": 0.7073,
+        "recall": 0.3973,
+        "f1": 0.5088,
+        "fpr": 0.0027,
+        "fnr": 0.6027,
+        "brier_score": 0.0107,
+        "confusion_matrix": {
+          "true_negatives": 4415,
+          "false_positives": 12,
+          "false_negatives": 44,
+          "true_positives": 29
+        },
+        "latency_ms": 0.0034,
+        "fit_time_sec": 0.5
+      },
+      "CatBoost": {
+        "pr_auc": 0.7201,
+        "roc_auc": 0.9762,
+        "recall_at_fpr_1pct": 0.7123,
+        "precision": 0.7818,
+        "recall": 0.589,
+        "f1": 0.6719,
+        "fpr": 0.0027,
+        "fnr": 0.411,
+        "brier_score": 0.0078,
+        "confusion_matrix": {
+          "true_negatives": 4415,
+          "false_positives": 12,
+          "false_negatives": 30,
+          "true_positives": 43
+        },
+        "latency_ms": 0.0018,
+        "fit_time_sec": 3.81
+      }
+    },
+    "ieee_cis": {
+      "Logistic Regression": {
+        "pr_auc": 0.0455,
+        "roc_auc": 0.6113,
+        "recall_at_fpr_1pct": 0.045,
+        "precision": 0.0363,
+        "recall": 0.5225,
+        "f1": 0.0679,
+        "fpr": 0.3509,
+        "fnr": 0.4775,
+        "brier_score": 0.2336,
+        "confusion_matrix": {
+          "true_negatives": 2849,
+          "false_positives": 1540,
+          "false_negatives": 53,
+          "true_positives": 58
+        },
+        "latency_ms": 0.0007,
+        "fit_time_sec": 0.11
+      },
+      "Random Forest": {
+        "pr_auc": 0.0885,
+        "roc_auc": 0.6639,
+        "recall_at_fpr_1pct": 0.0901,
+        "precision": 0.1538,
+        "recall": 0.1622,
+        "f1": 0.1579,
+        "fpr": 0.0226,
+        "fnr": 0.8378,
+        "brier_score": 0.0764,
+        "confusion_matrix": {
+          "true_negatives": 4290,
+          "false_positives": 99,
+          "false_negatives": 93,
+          "true_positives": 18
+        },
+        "latency_ms": 0.0195,
+        "fit_time_sec": 0.84
+      },
+      "XGBoost": {
+        "pr_auc": 0.0632,
+        "roc_auc": 0.6625,
+        "recall_at_fpr_1pct": 0.0541,
+        "precision": 0.0698,
+        "recall": 0.3063,
+        "f1": 0.1137,
+        "fpr": 0.1032,
+        "fnr": 0.6937,
+        "brier_score": 0.1044,
+        "confusion_matrix": {
+          "true_negatives": 3936,
+          "false_positives": 453,
+          "false_negatives": 77,
+          "true_positives": 34
+        },
+        "latency_ms": 0.0012,
+        "fit_time_sec": 0.61
+      },
+      "LightGBM": {
+        "pr_auc": 0.063,
+        "roc_auc": 0.6726,
+        "recall_at_fpr_1pct": 0.036,
+        "precision": 0.0829,
+        "recall": 0.2793,
+        "f1": 0.1278,
+        "fpr": 0.0781,
+        "fnr": 0.7207,
+        "brier_score": 0.0815,
+        "confusion_matrix": {
+          "true_negatives": 4046,
+          "false_positives": 343,
+          "false_negatives": 80,
+          "true_positives": 31
+        },
+        "latency_ms": 0.0038,
+        "fit_time_sec": 0.5
+      },
+      "CatBoost": {
+        "pr_auc": 0.0904,
+        "roc_auc": 0.6669,
+        "recall_at_fpr_1pct": 0.0991,
+        "precision": 0.068,
+        "recall": 0.4144,
+        "f1": 0.1169,
+        "fpr": 0.1435,
+        "fnr": 0.5856,
+        "brier_score": 0.1296,
+        "confusion_matrix": {
+          "true_negatives": 3759,
+          "false_positives": 630,
+          "false_negatives": 65,
+          "true_positives": 46
+        },
+        "latency_ms": 0.0019,
+        "fit_time_sec": 3.68
+      }
+    }
+  }
+}

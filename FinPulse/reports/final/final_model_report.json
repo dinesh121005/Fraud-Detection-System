@@ -1,0 +1,194 @@
+{
+  "timestamp": "2026-10-01T04:05:22Z",
+  "model_name": "CatBoost",
+  "training_dataset": "sparkov",
+  "calibrator_method": "platt",
+  "decision_thresholds": {
+    "tau_review": 0.158,
+    "tau_block": 0.5516
+  },
+  "datasets_evaluated": [
+    "sparkov",
+    "paysim",
+    "ieee_cis"
+  ],
+  "summary": [
+    {
+      "dataset": "Sparkov",
+      "test_size": 4500,
+      "pr_auc": 0.801,
+      "roc_auc": 0.9715,
+      "recall_1pct_fpr": 0.7742,
+      "precision": 0.4857,
+      "recall": 0.8226,
+      "f1": 0.6108,
+      "brier_score": 0.0058,
+      "ece": 0.00593,
+      "detection_rate": "82.26%",
+      "latency_ms": 0.0015
+    },
+    {
+      "dataset": "PaySim",
+      "test_size": 4500,
+      "pr_auc": 0.0002,
+      "roc_auc": 0.5218,
+      "recall_1pct_fpr": 0.0,
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "brier_score": 0.0171,
+      "ece": 0.11954,
+      "detection_rate": "0.0%",
+      "latency_ms": 0.0009
+    },
+    {
+      "dataset": "IEEE-CIS",
+      "test_size": 4500,
+      "pr_auc": 0.027,
+      "roc_auc": 0.4535,
+      "recall_1pct_fpr": 0.0,
+      "precision": 0.0201,
+      "recall": 0.0552,
+      "f1": 0.0295,
+      "brier_score": 0.0534,
+      "ece": 0.06047,
+      "detection_rate": "5.52%",
+      "latency_ms": 0.0009
+    }
+  ],
+  "detailed_results": {
+    "sparkov": {
+      "dataset": "Sparkov",
+      "test_sample_size": 4500,
+      "fraud_count": 62,
+      "fraud_rate_pct": 1.378,
+      "metrics": {
+        "pr_auc": 0.801,
+        "roc_auc": 0.9715,
+        "recall_at_fpr_1pct": 0.7742,
+        "precision": 0.4857,
+        "recall": 0.8226,
+        "f1": 0.6108,
+        "fpr": 0.0122,
+        "fnr": 0.1774,
+        "brier_score": 0.0058,
+        "confusion_matrix": {
+          "true_negatives": 4384,
+          "false_positives": 54,
+          "false_negatives": 11,
+          "true_positives": 51
+        },
+        "expected_calibration_error": 0.00593,
+        "latency_ms": 0.0015
+      },
+      "operational_tiers": {
+        "approved": {
+          "count": 4395,
+          "pct": 97.67,
+          "fraud_missed": 11
+        },
+        "reviewed": {
+          "count": 48,
+          "pct": 1.07,
+          "fraud_caught": 7
+        },
+        "blocked": {
+          "count": 57,
+          "pct": 1.27,
+          "fraud_caught": 44
+        },
+        "overall_fraud_detection_rate_pct": 82.26
+      },
+      "is_in_domain": true
+    },
+    "paysim": {
+      "dataset": "PaySim",
+      "test_sample_size": 4500,
+      "fraud_count": 1,
+      "fraud_rate_pct": 0.022,
+      "metrics": {
+        "pr_auc": 0.0002,
+        "roc_auc": 0.5218,
+        "recall_at_fpr_1pct": 0.0,
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0,
+        "fpr": 0.0036,
+        "fnr": 1.0,
+        "brier_score": 0.0171,
+        "confusion_matrix": {
+          "true_negatives": 4483,
+          "false_positives": 16,
+          "false_negatives": 1,
+          "true_positives": 0
+        },
+        "expected_calibration_error": 0.11954,
+        "latency_ms": 0.0009
+      },
+      "operational_tiers": {
+        "approved": {
+          "count": 4484,
+          "pct": 99.64,
+          "fraud_missed": 1
+        },
+        "reviewed": {
+          "count": 14,
+          "pct": 0.31,
+          "fraud_caught": 0
+        },
+        "blocked": {
+          "count": 2,
+          "pct": 0.04,
+          "fraud_caught": 0
+        },
+        "overall_fraud_detection_rate_pct": 0.0
+      },
+      "is_in_domain": false
+    },
+    "ieee_cis": {
+      "dataset": "IEEE-CIS",
+      "test_sample_size": 4500,
+      "fraud_count": 145,
+      "fraud_rate_pct": 3.222,
+      "metrics": {
+        "pr_auc": 0.027,
+        "roc_auc": 0.4535,
+        "recall_at_fpr_1pct": 0.0,
+        "precision": 0.0201,
+        "recall": 0.0552,
+        "f1": 0.0295,
+        "fpr": 0.0896,
+        "fnr": 0.9448,
+        "brier_score": 0.0534,
+        "confusion_matrix": {
+          "true_negatives": 3965,
+          "false_positives": 390,
+          "false_negatives": 137,
+          "true_positives": 8
+        },
+        "expected_calibration_error": 0.06047,
+        "latency_ms": 0.0009
+      },
+      "operational_tiers": {
+        "approved": {
+          "count": 4102,
+          "pct": 91.16,
+          "fraud_missed": 137
+        },
+        "reviewed": {
+          "count": 294,
+          "pct": 6.53,
+          "fraud_caught": 8
+        },
+        "blocked": {
+          "count": 104,
+          "pct": 2.31,
+          "fraud_caught": 0
+        },
+        "overall_fraud_detection_rate_pct": 5.52
+      },
+      "is_in_domain": false
+    }
+  },
+  "gate_status": "ML-08_UNTOUCHED_TEST_PASSED"
+}

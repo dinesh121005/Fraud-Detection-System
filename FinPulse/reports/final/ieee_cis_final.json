@@ -1,0 +1,44 @@
+{
+  "dataset": "IEEE-CIS",
+  "test_sample_size": 4500,
+  "fraud_count": 145,
+  "fraud_rate_pct": 3.222,
+  "metrics": {
+    "pr_auc": 0.027,
+    "roc_auc": 0.4535,
+    "recall_at_fpr_1pct": 0.0,
+    "precision": 0.0201,
+    "recall": 0.0552,
+    "f1": 0.0295,
+    "fpr": 0.0896,
+    "fnr": 0.9448,
+    "brier_score": 0.0534,
+    "confusion_matrix": {
+      "true_negatives": 3965,
+      "false_positives": 390,
+      "false_negatives": 137,
+      "true_positives": 8
+    },
+    "expected_calibration_error": 0.06047,
+    "latency_ms": 0.0009
+  },
+  "operational_tiers": {
+    "approved": {
+      "count": 4102,
+      "pct": 91.16,
+      "fraud_missed": 137
+    },
+    "reviewed": {
+      "count": 294,
+      "pct": 6.53,
+      "fraud_caught": 8
+    },
+    "blocked": {
+      "count": 104,
+      "pct": 2.31,
+      "fraud_caught": 0
+    },
+    "overall_fraud_detection_rate_pct": 5.52
+  },
+  "is_in_domain": false
+}

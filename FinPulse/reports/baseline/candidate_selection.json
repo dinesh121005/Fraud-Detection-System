@@ -1,0 +1,105 @@
+{
+  "candidate_model": "CatBoost",
+  "selection_metric": "pr_auc",
+  "secondary_metrics": [
+    "recall_at_1pct_fpr",
+    "precision",
+    "latency"
+  ],
+  "aggregate_performance": {
+    "mean_pr_auc": 0.6035,
+    "mean_roc_auc": 0.881,
+    "mean_recall_at_1pct_fpr": 0.6038,
+    "mean_precision": 0.3225,
+    "mean_recall": 0.6678,
+    "mean_f1": 0.3331,
+    "mean_latency_ms": 0.0021,
+    "mean_fit_time_sec": 3.63
+  },
+  "per_dataset_breakdown": {
+    "PaySim": {
+      "pr_auc": 1.0,
+      "roc_auc": 1.0,
+      "recall_at_fpr_1pct": 1.0,
+      "precision": 0.1176,
+      "recall": 1.0,
+      "f1": 0.2105,
+      "latency_ms": 0.0026
+    },
+    "Sparkov": {
+      "pr_auc": 0.7201,
+      "roc_auc": 0.9762,
+      "recall_at_fpr_1pct": 0.7123,
+      "precision": 0.7818,
+      "recall": 0.589,
+      "f1": 0.6719,
+      "latency_ms": 0.0018
+    },
+    "IEEE-CIS": {
+      "pr_auc": 0.0904,
+      "roc_auc": 0.6669,
+      "recall_at_fpr_1pct": 0.0991,
+      "precision": 0.068,
+      "recall": 0.4144,
+      "f1": 0.1169,
+      "latency_ms": 0.0019
+    }
+  },
+  "comparison_table": {
+    "CatBoost": {
+      "pr_auc": 0.6035,
+      "roc_auc": 0.881,
+      "recall_at_fpr_1pct": 0.6038,
+      "precision": 0.3225,
+      "recall": 0.6678,
+      "f1": 0.3331,
+      "latency_ms": 0.0021,
+      "fit_time_sec": 3.63,
+      "rank_score": 1.5226419294809008
+    },
+    "LightGBM": {
+      "pr_auc": 0.5717,
+      "roc_auc": 0.8781,
+      "recall_at_fpr_1pct": 0.5691,
+      "precision": 0.3051,
+      "recall": 0.5589,
+      "f1": 0.2863,
+      "latency_ms": 0.0036,
+      "fit_time_sec": 1.3367,
+      "rank_score": 1.4792609652509652
+    },
+    "Logistic Regression": {
+      "pr_auc": 0.4046,
+      "roc_auc": 0.8373,
+      "recall_at_fpr_1pct": 0.531,
+      "precision": 0.1408,
+      "recall": 0.7632,
+      "f1": 0.2328,
+      "latency_ms": 0.0007,
+      "fit_time_sec": 0.15,
+      "rank_score": 1.3824686593843096
+    },
+    "Random Forest": {
+      "pr_auc": 0.5723,
+      "roc_auc": 0.8782,
+      "recall_at_fpr_1pct": 0.5871,
+      "precision": 0.3105,
+      "recall": 0.1819,
+      "f1": 0.2239,
+      "latency_ms": 0.0196,
+      "fit_time_sec": 0.7367,
+      "rank_score": 1.3541504013377925
+    },
+    "XGBoost": {
+      "pr_auc": 0.2706,
+      "roc_auc": 0.8757,
+      "recall_at_fpr_1pct": 0.5888,
+      "precision": 0.333,
+      "recall": 0.5907,
+      "f1": 0.2973,
+      "latency_ms": 0.0014,
+      "fit_time_sec": 1.24,
+      "rank_score": 1.2933732938856015
+    }
+  }
+}

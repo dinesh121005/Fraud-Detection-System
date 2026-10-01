@@ -1,0 +1,32 @@
+# Real-time Kafka and Redis streaming configuration
+streaming:
+  kafka:
+    bootstrap_servers: "localhost:9092"
+    topics:
+      inbound_transactions: "transactions"
+      outbound_predictions: "predictions"
+      alerts: "fraud-alerts"
+      dead_letter: "transactions-dlq"
+    consumer:
+      group_id: "finpulse-inference-workers"
+      auto_offset_reset: "latest"
+      enable_auto_commit: false  # Reliable manual commit after validation
+      max_poll_records: 100
+      poll_timeout_ms: 1000
+      session_timeout_ms: 45000
+      max_poll_interval_ms: 300000
+    producer:
+      acks: "all"
+      retries: 3
+      compression_type: "gzip"
+      linger_ms: 10
+      request_timeout_ms: 15000
+
+  redis:
+    host: "localhost"
+    port: 6379
+    db: 0
+    password: null
+    socket_timeout: 1.0
+    rolling_window_ttl_seconds: 3600  # 1 hour auto-expiry
+    profile_ttl_seconds: 2592000      # 30 days customer profile TTL

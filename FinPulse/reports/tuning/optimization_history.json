@@ -1,0 +1,317 @@
+[
+  {
+    "trial_number": 0,
+    "params": {
+      "learning_rate": 0.02757359293934948,
+      "depth": 8,
+      "l2_leaf_reg": 7.587945476302646
+    },
+    "val_pr_auc": 0.72859
+  },
+  {
+    "trial_number": 1,
+    "params": {
+      "learning_rate": 0.050591436432963696,
+      "depth": 4,
+      "l2_leaf_reg": 2.403950683025824
+    },
+    "val_pr_auc": 0.69295
+  },
+  {
+    "trial_number": 2,
+    "params": {
+      "learning_rate": 0.011703388679635262,
+      "depth": 8,
+      "l2_leaf_reg": 6.41003510568888
+    },
+    "val_pr_auc": 0.67758
+  },
+  {
+    "trial_number": 3,
+    "params": {
+      "learning_rate": 0.06803900745073706,
+      "depth": 4,
+      "l2_leaf_reg": 9.72918866945795
+    },
+    "val_pr_auc": 0.74149
+  },
+  {
+    "trial_number": 4,
+    "params": {
+      "learning_rate": 0.09528587217040241,
+      "depth": 5,
+      "l2_leaf_reg": 2.636424704863906
+    },
+    "val_pr_auc": 0.72888
+  },
+  {
+    "trial_number": 5,
+    "params": {
+      "learning_rate": 0.016432378919707624,
+      "depth": 5,
+      "l2_leaf_reg": 5.72280788469014
+    },
+    "val_pr_auc": 0.64883
+  },
+  {
+    "trial_number": 6,
+    "params": {
+      "learning_rate": 0.032211189352044464,
+      "depth": 5,
+      "l2_leaf_reg": 6.506676052501415
+    },
+    "val_pr_auc": 0.72817
+  },
+  {
+    "trial_number": 7,
+    "params": {
+      "learning_rate": 0.01459007452373112,
+      "depth": 5,
+      "l2_leaf_reg": 4.297256589643226
+    },
+    "val_pr_auc": 0.67909
+  },
+  {
+    "trial_number": 8,
+    "params": {
+      "learning_rate": 0.03438586247938296,
+      "depth": 7,
+      "l2_leaf_reg": 2.7970640394252375
+    },
+    "val_pr_auc": 0.71155
+  },
+  {
+    "trial_number": 9,
+    "params": {
+      "learning_rate": 0.04025192252635066,
+      "depth": 6,
+      "l2_leaf_reg": 1.4180537144799796
+    },
+    "val_pr_auc": 0.7489
+  },
+  {
+    "trial_number": 10,
+    "params": {
+      "learning_rate": 0.13297502554390378,
+      "depth": 7,
+      "l2_leaf_reg": 1.0679258738466393
+    },
+    "val_pr_auc": 0.68297
+  },
+  {
+    "trial_number": 11,
+    "params": {
+      "learning_rate": 0.0642641802196391,
+      "depth": 4,
+      "l2_leaf_reg": 9.168983157542659
+    },
+    "val_pr_auc": 0.71993
+  },
+  {
+    "trial_number": 12,
+    "params": {
+      "learning_rate": 0.06019803541008,
+      "depth": 6,
+      "l2_leaf_reg": 9.618963555998775
+    },
+    "val_pr_auc": 0.7677
+  },
+  {
+    "trial_number": 13,
+    "params": {
+      "learning_rate": 0.04586622247540983,
+      "depth": 6,
+      "l2_leaf_reg": 7.981465341598605
+    },
+    "val_pr_auc": 0.76126
+  },
+  {
+    "trial_number": 14,
+    "params": {
+      "learning_rate": 0.02305875614994431,
+      "depth": 6,
+      "l2_leaf_reg": 8.297483141934606
+    },
+    "val_pr_auc": 0.70485
+  },
+  {
+    "trial_number": 15,
+    "params": {
+      "learning_rate": 0.08404186220701809,
+      "depth": 6,
+      "l2_leaf_reg": 8.225191551533047
+    },
+    "val_pr_auc": 0.75513
+  },
+  {
+    "trial_number": 16,
+    "params": {
+      "learning_rate": 0.04950542158055988,
+      "depth": 7,
+      "l2_leaf_reg": 9.839356713018137
+    },
+    "val_pr_auc": 0.74708
+  },
+  {
+    "trial_number": 17,
+    "params": {
+      "learning_rate": 0.14882931506455133,
+      "depth": 6,
+      "l2_leaf_reg": 7.435364765039021
+    },
+    "val_pr_auc": 0.74226
+  },
+  {
+    "trial_number": 18,
+    "params": {
+      "learning_rate": 0.021770413473547228,
+      "depth": 7,
+      "l2_leaf_reg": 8.756039952179613
+    },
+    "val_pr_auc": 0.71444
+  },
+  {
+    "trial_number": 19,
+    "params": {
+      "learning_rate": 0.1043469353404284,
+      "depth": 6,
+      "l2_leaf_reg": 5.10286636743995
+    },
+    "val_pr_auc": 0.72095
+  },
+  {
+    "trial_number": 20,
+    "params": {
+      "learning_rate": 0.04752081773170344,
+      "depth": 7,
+      "l2_leaf_reg": 7.227609176424701
+    },
+    "val_pr_auc": 0.73106
+  },
+  {
+    "trial_number": 21,
+    "params": {
+      "learning_rate": 0.07221659423085088,
+      "depth": 6,
+      "l2_leaf_reg": 8.392288127681779
+    },
+    "val_pr_auc": 0.74035
+  },
+  {
+    "trial_number": 22,
+    "params": {
+      "learning_rate": 0.09601421559900647,
+      "depth": 6,
+      "l2_leaf_reg": 7.879428543283591
+    },
+    "val_pr_auc": 0.71435
+  },
+  {
+    "trial_number": 23,
+    "params": {
+      "learning_rate": 0.0812716466586698,
+      "depth": 5,
+      "l2_leaf_reg": 9.103501396805834
+    },
+    "val_pr_auc": 0.73999
+  },
+  {
+    "trial_number": 24,
+    "params": {
+      "learning_rate": 0.0593208688566761,
+      "depth": 6,
+      "l2_leaf_reg": 6.801409352041926
+    },
+    "val_pr_auc": 0.76241
+  },
+  {
+    "trial_number": 25,
+    "params": {
+      "learning_rate": 0.05957688354071954,
+      "depth": 6,
+      "l2_leaf_reg": 6.772558408387163
+    },
+    "val_pr_auc": 0.76106
+  },
+  {
+    "trial_number": 26,
+    "params": {
+      "learning_rate": 0.04149961767639409,
+      "depth": 7,
+      "l2_leaf_reg": 5.684530881346468
+    },
+    "val_pr_auc": 0.72945
+  },
+  {
+    "trial_number": 27,
+    "params": {
+      "learning_rate": 0.05638765297266174,
+      "depth": 5,
+      "l2_leaf_reg": 9.324465394568374
+    },
+    "val_pr_auc": 0.73969
+  },
+  {
+    "trial_number": 28,
+    "params": {
+      "learning_rate": 0.041629390039152905,
+      "depth": 6,
+      "l2_leaf_reg": 3.787173514509415
+    },
+    "val_pr_auc": 0.74178
+  },
+  {
+    "trial_number": 29,
+    "params": {
+      "learning_rate": 0.027087279107892923,
+      "depth": 8,
+      "l2_leaf_reg": 7.357877295538361
+    },
+    "val_pr_auc": 0.73387
+  },
+  {
+    "trial_number": 30,
+    "params": {
+      "learning_rate": 0.1131533858016441,
+      "depth": 7,
+      "l2_leaf_reg": 5.834762789002475
+    },
+    "val_pr_auc": 0.7317
+  },
+  {
+    "trial_number": 31,
+    "params": {
+      "learning_rate": 0.05779708445434781,
+      "depth": 6,
+      "l2_leaf_reg": 6.7943924056633005
+    },
+    "val_pr_auc": 0.74071
+  },
+  {
+    "trial_number": 32,
+    "params": {
+      "learning_rate": 0.055999346495195085,
+      "depth": 6,
+      "l2_leaf_reg": 6.897817163800005
+    },
+    "val_pr_auc": 0.75162
+  },
+  {
+    "trial_number": 33,
+    "params": {
+      "learning_rate": 0.07636977914554913,
+      "depth": 6,
+      "l2_leaf_reg": 7.816425135445502
+    },
+    "val_pr_auc": 0.76853
+  },
+  {
+    "trial_number": 34,
+    "params": {
+      "learning_rate": 0.07937108906441354,
+      "depth": 5,
+      "l2_leaf_reg": 7.812621802174569
+    },
+    "val_pr_auc": 0.73051
+  }
+]

@@ -1,0 +1,105 @@
+{
+  "dataset": "IEEE-CIS",
+  "train_size": 21000,
+  "val_size": 4500,
+  "train_fraud": 604,
+  "val_fraud": 111,
+  "scale_pos_weight": 33.77,
+  "models": {
+    "Logistic Regression": {
+      "pr_auc": 0.0455,
+      "roc_auc": 0.6113,
+      "recall_at_fpr_1pct": 0.045,
+      "precision": 0.0363,
+      "recall": 0.5225,
+      "f1": 0.0679,
+      "fpr": 0.3509,
+      "fnr": 0.4775,
+      "brier_score": 0.2336,
+      "confusion_matrix": {
+        "true_negatives": 2849,
+        "false_positives": 1540,
+        "false_negatives": 53,
+        "true_positives": 58
+      },
+      "latency_ms": 0.0007,
+      "fit_time_sec": 0.11
+    },
+    "Random Forest": {
+      "pr_auc": 0.0885,
+      "roc_auc": 0.6639,
+      "recall_at_fpr_1pct": 0.0901,
+      "precision": 0.1538,
+      "recall": 0.1622,
+      "f1": 0.1579,
+      "fpr": 0.0226,
+      "fnr": 0.8378,
+      "brier_score": 0.0764,
+      "confusion_matrix": {
+        "true_negatives": 4290,
+        "false_positives": 99,
+        "false_negatives": 93,
+        "true_positives": 18
+      },
+      "latency_ms": 0.0195,
+      "fit_time_sec": 0.84
+    },
+    "XGBoost": {
+      "pr_auc": 0.0632,
+      "roc_auc": 0.6625,
+      "recall_at_fpr_1pct": 0.0541,
+      "precision": 0.0698,
+      "recall": 0.3063,
+      "f1": 0.1137,
+      "fpr": 0.1032,
+      "fnr": 0.6937,
+      "brier_score": 0.1044,
+      "confusion_matrix": {
+        "true_negatives": 3936,
+        "false_positives": 453,
+        "false_negatives": 77,
+        "true_positives": 34
+      },
+      "latency_ms": 0.0012,
+      "fit_time_sec": 0.61
+    },
+    "LightGBM": {
+      "pr_auc": 0.063,
+      "roc_auc": 0.6726,
+      "recall_at_fpr_1pct": 0.036,
+      "precision": 0.0829,
+      "recall": 0.2793,
+      "f1": 0.1278,
+      "fpr": 0.0781,
+      "fnr": 0.7207,
+      "brier_score": 0.0815,
+      "confusion_matrix": {
+        "true_negatives": 4046,
+        "false_positives": 343,
+        "false_negatives": 80,
+        "true_positives": 31
+      },
+      "latency_ms": 0.0038,
+      "fit_time_sec": 0.5
+    },
+    "CatBoost": {
+      "pr_auc": 0.0904,
+      "roc_auc": 0.6669,
+      "recall_at_fpr_1pct": 0.0991,
+      "precision": 0.068,
+      "recall": 0.4144,
+      "f1": 0.1169,
+      "fpr": 0.1435,
+      "fnr": 0.5856,
+      "brier_score": 0.1296,
+      "confusion_matrix": {
+        "true_negatives": 3759,
+        "false_positives": 630,
+        "false_negatives": 65,
+        "true_positives": 46
+      },
+      "latency_ms": 0.0019,
+      "fit_time_sec": 3.68
+    }
+  }
+}

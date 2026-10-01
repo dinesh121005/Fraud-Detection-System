@@ -1,0 +1,74 @@
+# Dataset-specific configurations and leakage boundaries
+datasets:
+  paysim:
+    raw_path: "d:/Fraud-Detection-System/FinPulse/data/paysim.csv"
+    processed_path: "d:/Fraud-Detection-System/FinPulse/data/processed/paysim_clean.parquet"
+    target_column: "isFraud"
+    timestamp_column: "step"
+    time_unit: "hours"
+    time_reference: null
+    customer_id_col: "nameOrig"
+    merchant_id_col: "nameDest"
+    amount_col: "amount"
+    type_col: "type"
+    origin_balance_col: "oldbalanceOrg"
+    available_at_decision:
+      - "step"
+      - "type"
+      - "amount"
+      - "nameOrig"
+      - "oldbalanceOrg"
+      - "nameDest"
+    leakage_columns_to_drop:
+      - "newbalanceOrig"    # Balance AFTER transaction execution
+      - "oldbalanceDest"    # Post-clearing recipient balance
+      - "newbalanceDest"    # Post-clearing recipient balance
+      - "isFlaggedFraud"    # Simulator synthetic heuristic flag
+
+  sparkov:
+    train_raw_path: "d:/Fraud-Detection-System/FinPulse/data/Sparkov/fraudTrain.csv"
+    test_raw_path: "d:/Fraud-Detection-System/FinPulse/data/Sparkov/fraudTest.csv"
+    processed_path: "d:/Fraud-Detection-System/FinPulse/data/processed/sparkov_clean.parquet"
+    target_column: "is_fraud"
+    timestamp_column: "trans_date_trans_time"
+    unix_time_col: "unix_time"
+    customer_id_col: "cc_num"
+    merchant_id_col: "merchant"
+    category_col: "category"
+    amount_col: "amt"
+    location_cols:
+      customer_lat: "lat"
+      customer_long: "long"
+      merchant_lat: "merch_lat"
+      merchant_long: "merch_long"
+    profile_cols:
+      dob: "dob"
+      city_pop: "city_pop"
+      job: "job"
+    leakage_columns_to_drop:
+      - "trans_num"         # Post-transaction transaction ID
+    sanitization_rules:
+      strip_merchant_prefix: "fraud_" # Strips synthetic simulator leak
+
+  ieee_cis:
+    train_transaction_path: "d:/Fraud-Detection-System/FinPulse/data/IEE-CIS/train_transaction.csv"
+    train_identity_path: "d:/Fraud-Detection-System/FinPulse/data/IEE-CIS/train_identity.csv"
+    test_transaction_path: "d:/Fraud-Detection-System/FinPulse/data/IEE-CIS/test_transaction.csv"
+    test_identity_path: "d:/Fraud-Detection-System/FinPulse/data/IEE-CIS/test_identity.csv"
+    processed_path: "d:/Fraud-Detection-System/FinPulse/data/processed/ieee_clean.parquet"
+    target_column: "isFraud"
+    timestamp_column: "TransactionDT"
+    time_unit: "seconds"
+    amount_col: "TransactionAmt"
+    product_col: "ProductCD"
+    card_cols: ["card1", "card2", "card3", "card4", "card5", "card6"]
+    address_cols: ["addr1", "addr2", "dist1", "dist2"]
+    email_cols: ["P_emaildomain", "R_emaildomain"]
+    identity_join_key: "TransactionID"
+    device_cols: ["DeviceType", "DeviceInfo"]
+    max_null_threshold: 0.75 # Drop V-columns with >75% nulls
+
+temporal_split:
+  train_ratio: 0.70
+  validation_ratio: 0.15
+  test_ratio: 0.15

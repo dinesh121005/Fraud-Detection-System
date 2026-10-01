@@ -1,0 +1,41 @@
+# Fraud Detection Evaluation and Decision Policy Configuration
+evaluation:
+  random_seed: 42
+  metrics:
+    primary: "pr_auc"
+    secondary:
+      - "roc_auc"
+      - "precision"
+      - "recall"
+      - "f1"
+      - "recall_at_fpr_1pct"
+      - "fpr"
+      - "fnr"
+      - "brier_score"
+      - "latency_ms"
+
+  temporal_split:
+    train_ratio: 0.70
+    val_ratio: 0.15
+    test_ratio: 0.15
+
+  threshold_optimization:
+    target_fpr: 0.01             # Maximum allowed false positive rate for review tier (1.0%)
+    min_block_precision: 0.85    # Minimum required precision to automatically block transactions (85%)
+    optimization_metric: "precision_recall_constraint"
+
+  calibration:
+    methods:
+      - "isotonic"
+      - "platt"
+    selection_metric: "brier_score"
+
+  benchmark_datasets:
+    - "paysim"
+    - "sparkov"
+    - "ieee_cis"
+
+  benchmark_sample_sizes:
+    paysim: 40000
+    sparkov: 40000
+    ieee_cis: 40000

@@ -44,3 +44,7 @@ FinPulse/data/
 # Environment variables
 .env
 .env.*
+
+# Machine Learning Artifacts
+catboost_info/
+FinPulse/catboost_info/

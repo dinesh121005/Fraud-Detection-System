@@ -1,0 +1,62 @@
+{
+  "paysim": {
+    "dataset": "PaySim",
+    "sample_size": 10000,
+    "rows_processed": 10000,
+    "feature_dim": 32,
+    "expected_feature_dim": 32,
+    "nan_count": 0,
+    "inf_count": 0,
+    "temporal_order_valid": true,
+    "status": "VALID",
+    "splits": {
+      "train_rows": 7000,
+      "train_fraud": 60,
+      "val_rows": 1500,
+      "val_fraud": 6,
+      "test_rows": 1500,
+      "test_fraud": 2
+    },
+    "processing_seconds": 8.26
+  },
+  "sparkov": {
+    "dataset": "Sparkov",
+    "sample_size": 10000,
+    "rows_processed": 10000,
+    "feature_dim": 32,
+    "expected_feature_dim": 32,
+    "nan_count": 0,
+    "inf_count": 0,
+    "temporal_order_valid": true,
+    "status": "VALID",
+    "splits": {
+      "train_rows": 7000,
+      "train_fraud": 35,
+      "val_rows": 1500,
+      "val_fraud": 10,
+      "test_rows": 1500,
+      "test_fraud": 2
+    },
+    "processing_seconds": 8.36
+  },
+  "ieee_cis": {
+    "dataset": "IEEE-CIS",
+    "sample_size": 10000,
+    "rows_processed": 10000,
+    "feature_dim": 32,
+    "expected_feature_dim": 32,
+    "nan_count": 0,
+    "inf_count": 0,
+    "temporal_order_valid": true,
+    "status": "VALID",
+    "splits": {
+      "train_rows": 7000,
+      "train_fraud": 172,
+      "val_rows": 1500,
+      "val_fraud": 44,
+      "test_rows": 1500,
+      "test_fraud": 49
+    },
+    "processing_seconds": 16.16
+  }
+}
