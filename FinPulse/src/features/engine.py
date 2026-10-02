@@ -1,8 +1,9 @@
 """Unified FinPulse 32-Feature Engine with Strict Offline/Online Parity."""
+from __future__ import annotations
 import time
 import numpy as np
 import pandas as pd
-from typing import Dict, Any, List, Tuple, Optional, Union
+from typing import TYPE_CHECKING, Dict, Any, List, Tuple, Optional, Union
 from collections import defaultdict, deque
 
 from .schema import (
@@ -22,7 +23,9 @@ from .transformations import (
 from .encoders import PAYMENT_TYPE_MAP, FastFrequencyEncoder
 from src.state.sliding_window import RedisSlidingWindowEngine
 from src.state.manager import RedisStateManager, CustomerHistoricalContext
-from src.streaming.schema import TransactionEvent
+
+if TYPE_CHECKING:
+    from src.streaming.schema import TransactionEvent
 
 def normalize_transaction_to_dict(
     tx: Union[CommonTransactionSchema, TransactionEvent, Dict[str, Any]]
@@ -369,6 +372,7 @@ class FinPulseFeatureEngine:
             sig = inspect.signature(self.state_manager.record_transaction)
             if len(sig.parameters) == 1:
                 if isinstance(tx, CommonTransactionSchema):
+                    from src.streaming.schema import TransactionEvent
                     event = TransactionEvent.from_common_schema(tx)
                 else:
                     event = tx

@@ -65,6 +65,22 @@ class InferenceResult:
             res["latency_ms"] = round(float(self.latency_ms), 3)
         return res
 
+    @property
+    def ml_prob(self) -> float:
+        """Deprecated backward-compatible alias for calibrated_probability."""
+        return self.calibrated_probability
+
+    def to_r5_contract(self) -> Dict[str, Any]:
+        """Convert to canonical R4 -> R5 hybrid risk engine input contract."""
+        return {
+            "transaction_id": self.transaction_id,
+            "model_version": self.model_version,
+            "feature_schema_version": self.feature_schema_version,
+            "calibrated_probability": round(float(self.calibrated_probability), 6),
+            "ml_decision": self.decision,
+            "raw_probability": round(float(self.raw_probability), 6)
+        }
+
 class ProductionModelService:
     """
     R4 Production Model Service:

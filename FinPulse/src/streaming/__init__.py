@@ -3,6 +3,7 @@ from .schema import TransactionEvent, create_sample_transaction
 from .config import StreamingConfig, load_streaming_config
 from .producer import TransactionProducer, TransactionSimulator
 from .consumer import TransactionConsumer
+from .publisher import DecisionEventPublisher, KafkaDeliveryError
 
 __all__ = [
     "TransactionEvent",
@@ -12,4 +13,6 @@ __all__ = [
     "TransactionProducer",
     "TransactionSimulator",
     "TransactionConsumer",
+    "DecisionEventPublisher",
+    "KafkaDeliveryError",
 ]

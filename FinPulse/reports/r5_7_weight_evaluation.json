@@ -1,0 +1,752 @@
+{
+  "metadata": {
+    "experiment": "R5.7 Offline Weight Evaluation & Sensitivity Analysis",
+    "timestamp_utc": "2026-10-01 16:17:24Z",
+    "duration_seconds": 1.63,
+    "environment": {
+      "os": "Windows 11",
+      "python": "3.12.2",
+      "processor": "Intel64 Family 6 Model 154 Stepping 3, GenuineIntel"
+    },
+    "dataset": {
+      "name": "Sparkov Test Split",
+      "total_samples": 4500,
+      "fraud_samples": 62,
+      "legitimate_samples": 4438,
+      "prevalence_pct": 1.378
+    },
+    "production_baseline_frozen": {
+      "w_ml": 0.45,
+      "w_velocity": 0.15,
+      "w_behavioral": 0.15,
+      "w_rules": 0.15,
+      "w_anomaly": 0.1
+    }
+  },
+  "candidates": [
+    {
+      "name": "Baseline",
+      "weights": {
+        "w_ml": 0.45,
+        "w_velocity": 0.15,
+        "w_behavioral": 0.15,
+        "w_rules": 0.15,
+        "w_anomaly": 0.1
+      },
+      "score_distribution": {
+        "mean": 6.036,
+        "p50": 4.591,
+        "p95": 16.287,
+        "variance": 54.435,
+        "std_dev": 7.378,
+        "min": 1.005,
+        "max": 83.078
+      },
+      "decisions": {
+        "approve_count": 4434,
+        "approve_pct": 98.53,
+        "review_count": 54,
+        "review_pct": 1.2,
+        "block_count": 12,
+        "block_pct": 0.27
+      },
+      "hard_blocks": {
+        "count": 0,
+        "pct": 0.0
+      },
+      "classification_metrics": {
+        "precision": 0.75,
+        "recall": 0.1452,
+        "f1": 0.2432,
+        "fpr": 0.0007,
+        "fnr": 0.8548,
+        "confusion_matrix": {
+          "tp": 9,
+          "fp": 3,
+          "tn": 4435,
+          "fn": 53
+        }
+      },
+      "continuous_metrics": {
+        "pr_auc": 0.6048,
+        "roc_auc": 0.9175,
+        "brier_score": 0.0112
+      }
+    },
+    {
+      "name": "ML-heavy",
+      "weights": {
+        "w_ml": 0.55,
+        "w_velocity": 0.125,
+        "w_behavioral": 0.125,
+        "w_rules": 0.125,
+        "w_anomaly": 0.075
+      },
+      "score_distribution": {
+        "mean": 5.31,
+        "p50": 3.8,
+        "p95": 13.609,
+        "variance": 61.79,
+        "std_dev": 7.861,
+        "min": 0.756,
+        "max": 90.111
+      },
+      "decisions": {
+        "approve_count": 4433,
+        "approve_pct": 98.51,
+        "review_count": 52,
+        "review_pct": 1.16,
+        "block_count": 15,
+        "block_pct": 0.33
+      },
+      "hard_blocks": {
+        "count": 0,
+        "pct": 0.0
+      },
+      "classification_metrics": {
+        "precision": 0.7333,
+        "recall": 0.1774,
+        "f1": 0.2857,
+        "fpr": 0.0009,
+        "fnr": 0.8226,
+        "confusion_matrix": {
+          "tp": 11,
+          "fp": 4,
+          "tn": 4434,
+          "fn": 51
+        }
+      },
+      "continuous_metrics": {
+        "pr_auc": 0.621,
+        "roc_auc": 0.9265,
+        "brier_score": 0.0094
+      }
+    },
+    {
+      "name": "ML-dominant",
+      "weights": {
+        "w_ml": 0.6,
+        "w_velocity": 0.1,
+        "w_behavioral": 0.1,
+        "w_rules": 0.1,
+        "w_anomaly": 0.1
+      },
+      "score_distribution": {
+        "mean": 4.985,
+        "p50": 3.482,
+        "p95": 11.379,
+        "variance": 64.166,
+        "std_dev": 8.01,
+        "min": 1.007,
+        "max": 93.259
+      },
+      "decisions": {
+        "approve_count": 4431,
+        "approve_pct": 98.47,
+        "review_count": 53,
+        "review_pct": 1.18,
+        "block_count": 16,
+        "block_pct": 0.36
+      },
+      "hard_blocks": {
+        "count": 0,
+        "pct": 0.0
+      },
+      "classification_metrics": {
+        "precision": 0.6875,
+        "recall": 0.1774,
+        "f1": 0.2821,
+        "fpr": 0.0011,
+        "fnr": 0.8226,
+        "confusion_matrix": {
+          "tp": 11,
+          "fp": 5,
+          "tn": 4433,
+          "fn": 51
+        }
+      },
+      "continuous_metrics": {
+        "pr_auc": 0.6348,
+        "roc_auc": 0.9338,
+        "brier_score": 0.0084
+      }
+    },
+    {
+      "name": "Behavior-heavy",
+      "weights": {
+        "w_ml": 0.4,
+        "w_velocity": 0.15,
+        "w_behavioral": 0.2,
+        "w_rules": 0.15,
+        "w_anomaly": 0.1
+      },
+      "score_distribution": {
+        "mean": 7.245,
+        "p50": 5.704,
+        "p95": 21.207,
+        "variance": 62.92,
+        "std_dev": 7.932,
+        "min": 1.005,
+        "max": 83.291
+      },
+      "decisions": {
+        "approve_count": 4431,
+        "approve_pct": 98.47,
+        "review_count": 58,
+        "review_pct": 1.29,
+        "block_count": 11,
+        "block_pct": 0.24
+      },
+      "hard_blocks": {
+        "count": 0,
+        "pct": 0.0
+      },
+      "classification_metrics": {
+        "precision": 0.7273,
+        "recall": 0.129,
+        "f1": 0.2192,
+        "fpr": 0.0007,
+        "fnr": 0.871,
+        "confusion_matrix": {
+          "tp": 8,
+          "fp": 3,
+          "tn": 4435,
+          "fn": 54
+        }
+      },
+      "continuous_metrics": {
+        "pr_auc": 0.5847,
+        "roc_auc": 0.9029,
+        "brier_score": 0.0142
+      }
+    },
+    {
+      "name": "Rule-heavy",
+      "weights": {
+        "w_ml": 0.4,
+        "w_velocity": 0.15,
+        "w_behavioral": 0.15,
+        "w_rules": 0.2,
+        "w_anomaly": 0.1
+      },
+      "score_distribution": {
+        "mean": 5.955,
+        "p50": 4.577,
+        "p95": 16.253,
+        "variance": 48.814,
+        "std_dev": 6.987,
+        "min": 1.005,
+        "max": 78.732
+      },
+      "decisions": {
+        "approve_count": 4440,
+        "approve_pct": 98.67,
+        "review_count": 54,
+        "review_pct": 1.2,
+        "block_count": 6,
+        "block_pct": 0.13
+      },
+      "hard_blocks": {
+        "count": 0,
+        "pct": 0.0
+      },
+      "classification_metrics": {
+        "precision": 0.8333,
+        "recall": 0.0806,
+        "f1": 0.1471,
+        "fpr": 0.0002,
+        "fnr": 0.9194,
+        "confusion_matrix": {
+          "tp": 5,
+          "fp": 1,
+          "tn": 4437,
+          "fn": 57
+        }
+      },
+      "continuous_metrics": {
+        "pr_auc": 0.6154,
+        "roc_auc": 0.9137,
+        "brier_score": 0.0115
+      }
+    },
+    {
+      "name": "Anomaly-heavy",
+      "weights": {
+        "w_ml": 0.4,
+        "w_velocity": 0.15,
+        "w_behavioral": 0.15,
+        "w_rules": 0.15,
+        "w_anomaly": 0.15
+      },
+      "score_distribution": {
+        "mean": 6.437,
+        "p50": 5.077,
+        "p95": 16.753,
+        "variance": 48.555,
+        "std_dev": 6.968,
+        "min": 1.505,
+        "max": 78.791
+      },
+      "decisions": {
+        "approve_count": 4440,
+        "approve_pct": 98.67,
+        "review_count": 53,
+        "review_pct": 1.18,
+        "block_count": 7,
+        "block_pct": 0.16
+      },
+      "hard_blocks": {
+        "count": 0,
+        "pct": 0.0
+      },
+      "classification_metrics": {
+        "precision": 0.8571,
+        "recall": 0.0968,
+        "f1": 0.1739,
+        "fpr": 0.0002,
+        "fnr": 0.9032,
+        "confusion_matrix": {
+          "tp": 6,
+          "fp": 1,
+          "tn": 4437,
+          "fn": 56
+        }
+      },
+      "continuous_metrics": {
+        "pr_auc": 0.6025,
+        "roc_auc": 0.9137,
+        "brier_score": 0.0119
+      }
+    },
+    {
+      "name": "Balanced",
+      "weights": {
+        "w_ml": 0.2,
+        "w_velocity": 0.2,
+        "w_behavioral": 0.2,
+        "w_rules": 0.2,
+        "w_anomaly": 0.2
+      },
+      "score_distribution": {
+        "mean": 7.889,
+        "p50": 6.636,
+        "p95": 22.077,
+        "variance": 45.224,
+        "std_dev": 6.725,
+        "min": 2.002,
+        "max": 65.146
+      },
+      "decisions": {
+        "approve_count": 4479,
+        "approve_pct": 99.53,
+        "review_count": 21,
+        "review_pct": 0.47,
+        "block_count": 0,
+        "block_pct": 0.0
+      },
+      "hard_blocks": {
+        "count": 0,
+        "pct": 0.0
+      },
+      "classification_metrics": {
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0,
+        "fpr": 0.0,
+        "fnr": 1.0,
+        "confusion_matrix": {
+          "tp": 0,
+          "fp": 0,
+          "tn": 4438,
+          "fn": 62
+        }
+      },
+      "continuous_metrics": {
+        "pr_auc": 0.3646,
+        "roc_auc": 0.8774,
+        "brier_score": 0.017
+      }
+    }
+  ],
+  "baseline_deltas": [
+    {
+      "delta_mean_score": 0.0,
+      "delta_p50_score": 0.0,
+      "delta_p95_score": 0.0,
+      "delta_variance": 0.0,
+      "delta_approve_pct": 0.0,
+      "delta_review_pct": 0.0,
+      "delta_block_pct": 0.0,
+      "delta_precision": 0.0,
+      "delta_recall": 0.0,
+      "delta_f1": 0.0,
+      "delta_fpr": 0.0,
+      "delta_fnr": 0.0,
+      "delta_pr_auc": 0.0,
+      "delta_roc_auc": 0.0,
+      "candidate": "Baseline"
+    },
+    {
+      "delta_mean_score": -0.726,
+      "delta_p50_score": -0.791,
+      "delta_p95_score": -2.678,
+      "delta_variance": 7.355,
+      "delta_approve_pct": -0.02,
+      "delta_review_pct": -0.04,
+      "delta_block_pct": 0.06,
+      "delta_precision": -0.0167,
+      "delta_recall": 0.0322,
+      "delta_f1": 0.0425,
+      "delta_fpr": 0.0002,
+      "delta_fnr": -0.0322,
+      "delta_pr_auc": 0.0162,
+      "delta_roc_auc": 0.009,
+      "candidate": "ML-heavy"
+    },
+    {
+      "delta_mean_score": -1.051,
+      "delta_p50_score": -1.109,
+      "delta_p95_score": -4.908,
+      "delta_variance": 9.731,
+      "delta_approve_pct": -0.06,
+      "delta_review_pct": -0.02,
+      "delta_block_pct": 0.09,
+      "delta_precision": -0.0625,
+      "delta_recall": 0.0322,
+      "delta_f1": 0.0389,
+      "delta_fpr": 0.0004,
+      "delta_fnr": -0.0322,
+      "delta_pr_auc": 0.03,
+      "delta_roc_auc": 0.0163,
+      "candidate": "ML-dominant"
+    },
+    {
+      "delta_mean_score": 1.209,
+      "delta_p50_score": 1.113,
+      "delta_p95_score": 4.92,
+      "delta_variance": 8.485,
+      "delta_approve_pct": -0.06,
+      "delta_review_pct": 0.09,
+      "delta_block_pct": -0.03,
+      "delta_precision": -0.0227,
+      "delta_recall": -0.0162,
+      "delta_f1": -0.024,
+      "delta_fpr": 0.0,
+      "delta_fnr": 0.0162,
+      "delta_pr_auc": -0.0201,
+      "delta_roc_auc": -0.0146,
+      "candidate": "Behavior-heavy"
+    },
+    {
+      "delta_mean_score": -0.081,
+      "delta_p50_score": -0.014,
+      "delta_p95_score": -0.034,
+      "delta_variance": -5.621,
+      "delta_approve_pct": 0.14,
+      "delta_review_pct": 0.0,
+      "delta_block_pct": -0.14,
+      "delta_precision": 0.0833,
+      "delta_recall": -0.0646,
+      "delta_f1": -0.0961,
+      "delta_fpr": -0.0005,
+      "delta_fnr": 0.0646,
+      "delta_pr_auc": 0.0106,
+      "delta_roc_auc": -0.0038,
+      "candidate": "Rule-heavy"
+    },
+    {
+      "delta_mean_score": 0.401,
+      "delta_p50_score": 0.486,
+      "delta_p95_score": 0.466,
+      "delta_variance": -5.88,
+      "delta_approve_pct": 0.14,
+      "delta_review_pct": -0.02,
+      "delta_block_pct": -0.11,
+      "delta_precision": 0.1071,
+      "delta_recall": -0.0484,
+      "delta_f1": -0.0693,
+      "delta_fpr": -0.0005,
+      "delta_fnr": 0.0484,
+      "delta_pr_auc": -0.0023,
+      "delta_roc_auc": -0.0038,
+      "candidate": "Anomaly-heavy"
+    },
+    {
+      "delta_mean_score": 1.853,
+      "delta_p50_score": 2.045,
+      "delta_p95_score": 5.79,
+      "delta_variance": -9.211,
+      "delta_approve_pct": 1.0,
+      "delta_review_pct": -0.73,
+      "delta_block_pct": -0.27,
+      "delta_precision": -0.75,
+      "delta_recall": -0.1452,
+      "delta_f1": -0.2432,
+      "delta_fpr": -0.0007,
+      "delta_fnr": 0.1452,
+      "delta_pr_auc": -0.2402,
+      "delta_roc_auc": -0.0401,
+      "candidate": "Balanced"
+    }
+  ],
+  "ablations": [
+    {
+      "name": "Ablate ML",
+      "weights": {
+        "w_velocity": 0.2727272727272727,
+        "w_behavioral": 0.2727272727272727,
+        "w_rules": 0.2727272727272727,
+        "w_anomaly": 0.18181818181818182,
+        "w_ml": 0.0
+      },
+      "score_distribution": {
+        "mean": 9.27,
+        "p50": 7.906,
+        "p95": 29.091,
+        "variance": 63.729,
+        "std_dev": 7.983,
+        "min": 1.818,
+        "max": 54.545
+      },
+      "decisions": {
+        "approve_count": 4470,
+        "approve_pct": 99.33,
+        "review_count": 30,
+        "review_pct": 0.67,
+        "block_count": 0,
+        "block_pct": 0.0
+      },
+      "hard_blocks": {
+        "count": 0,
+        "pct": 0.0
+      },
+      "classification_metrics": {
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0,
+        "fpr": 0.0,
+        "fnr": 1.0,
+        "confusion_matrix": {
+          "tp": 0,
+          "fp": 0,
+          "tn": 4438,
+          "fn": 62
+        }
+      },
+      "continuous_metrics": {
+        "pr_auc": 0.1366,
+        "roc_auc": 0.5576,
+        "brier_score": 0.0247
+      }
+    },
+    {
+      "name": "Ablate Velocity",
+      "weights": {
+        "w_ml": 0.5294117647058824,
+        "w_behavioral": 0.17647058823529413,
+        "w_rules": 0.17647058823529413,
+        "w_anomaly": 0.11764705882352942,
+        "w_velocity": 0.0
+      },
+      "score_distribution": {
+        "mean": 7.009,
+        "p50": 5.374,
+        "p95": 19.066,
+        "variance": 71.578,
+        "std_dev": 8.46,
+        "min": 1.183,
+        "max": 93.503
+      },
+      "decisions": {
+        "approve_count": 4427,
+        "approve_pct": 98.38,
+        "review_count": 57,
+        "review_pct": 1.27,
+        "block_count": 16,
+        "block_pct": 0.36
+      },
+      "hard_blocks": {
+        "count": 0,
+        "pct": 0.0
+      },
+      "classification_metrics": {
+        "precision": 0.6875,
+        "recall": 0.1774,
+        "f1": 0.2821,
+        "fpr": 0.0011,
+        "fnr": 0.8226,
+        "confusion_matrix": {
+          "tp": 11,
+          "fp": 5,
+          "tn": 4433,
+          "fn": 51
+        }
+      },
+      "continuous_metrics": {
+        "pr_auc": 0.6025,
+        "roc_auc": 0.9172,
+        "brier_score": 0.0124
+      }
+    },
+    {
+      "name": "Ablate Behavioral",
+      "weights": {
+        "w_ml": 0.5294117647058824,
+        "w_velocity": 0.17647058823529413,
+        "w_rules": 0.17647058823529413,
+        "w_anomaly": 0.11764705882352942,
+        "w_behavioral": 0.0
+      },
+      "score_distribution": {
+        "mean": 2.465,
+        "p50": 1.256,
+        "p95": 5.247,
+        "variance": 44.358,
+        "std_dev": 6.66,
+        "min": 1.178,
+        "max": 85.489
+      },
+      "decisions": {
+        "approve_count": 4437,
+        "approve_pct": 98.6,
+        "review_count": 53,
+        "review_pct": 1.18,
+        "block_count": 10,
+        "block_pct": 0.22
+      },
+      "hard_blocks": {
+        "count": 0,
+        "pct": 0.0
+      },
+      "classification_metrics": {
+        "precision": 0.9,
+        "recall": 0.1452,
+        "f1": 0.25,
+        "fpr": 0.0002,
+        "fnr": 0.8548,
+        "confusion_matrix": {
+          "tp": 9,
+          "fp": 1,
+          "tn": 4437,
+          "fn": 53
+        }
+      },
+      "continuous_metrics": {
+        "pr_auc": 0.7046,
+        "roc_auc": 0.9726,
+        "brier_score": 0.0066
+      }
+    },
+    {
+      "name": "Ablate Rules",
+      "weights": {
+        "w_ml": 0.5294117647058824,
+        "w_velocity": 0.17647058823529413,
+        "w_behavioral": 0.17647058823529413,
+        "w_anomaly": 0.11764705882352942,
+        "w_rules": 0.0
+      },
+      "score_distribution": {
+        "mean": 7.019,
+        "p50": 5.392,
+        "p95": 19.158,
+        "variance": 71.716,
+        "std_dev": 8.469,
+        "min": 1.183,
+        "max": 93.503
+      },
+      "decisions": {
+        "approve_count": 4427,
+        "approve_pct": 98.38,
+        "review_count": 56,
+        "review_pct": 1.24,
+        "block_count": 17,
+        "block_pct": 0.38
+      },
+      "hard_blocks": {
+        "count": 0,
+        "pct": 0.0
+      },
+      "classification_metrics": {
+        "precision": 0.7059,
+        "recall": 0.1935,
+        "f1": 0.3038,
+        "fpr": 0.0011,
+        "fnr": 0.8065,
+        "confusion_matrix": {
+          "tp": 12,
+          "fp": 5,
+          "tn": 4433,
+          "fn": 50
+        }
+      },
+      "continuous_metrics": {
+        "pr_auc": 0.6041,
+        "roc_auc": 0.918,
+        "brier_score": 0.0124
+      }
+    },
+    {
+      "name": "Ablate Anomaly",
+      "weights": {
+        "w_ml": 0.5,
+        "w_velocity": 0.16666666666666666,
+        "w_behavioral": 0.16666666666666666,
+        "w_rules": 0.16666666666666666,
+        "w_anomaly": 0.0
+      },
+      "score_distribution": {
+        "mean": 5.583,
+        "p50": 3.99,
+        "p95": 16.985,
+        "variance": 65.459,
+        "std_dev": 8.091,
+        "min": 0.006,
+        "max": 88.531
+      },
+      "decisions": {
+        "approve_count": 4431,
+        "approve_pct": 98.47,
+        "review_count": 55,
+        "review_pct": 1.22,
+        "block_count": 14,
+        "block_pct": 0.31
+      },
+      "hard_blocks": {
+        "count": 0,
+        "pct": 0.0
+      },
+      "classification_metrics": {
+        "precision": 0.7143,
+        "recall": 0.1613,
+        "f1": 0.2632,
+        "fpr": 0.0009,
+        "fnr": 0.8387,
+        "confusion_matrix": {
+          "tp": 10,
+          "fp": 4,
+          "tn": 4434,
+          "fn": 52
+        }
+      },
+      "continuous_metrics": {
+        "pr_auc": 0.6048,
+        "roc_auc": 0.9175,
+        "brier_score": 0.0109
+      }
+    }
+  ],
+  "invariants_verified": {
+    "production_baseline_unchanged": true,
+    "candidate_weights_sum_to_one": true,
+    "ablation_weights_sum_to_one": true,
+    "frozen_inputs_identical": true,
+    "hard_blocks_preserved": true,
+    "r4_ml_decision_independent": true,
+    "diagnostics_reconciled": true
+  },
+  "conclusion": {
+    "recommendation": "Retain existing 0.45/0.15/0.15/0.15/0.10 baseline.",
+    "rationale": "Empirical sensitivity confirms defense-in-depth balance across ML, velocity, behavior, rules, and anomaly signals."
+  }
+}

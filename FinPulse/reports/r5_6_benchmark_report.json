@@ -1,0 +1,105 @@
+{
+  "environment": {
+    "os": "Windows 11 (10.0.26200)",
+    "python": "3.12.2",
+    "processor": "Intel64 Family 6 Model 154 Stepping 3, GenuineIntel",
+    "architecture": "AMD64",
+    "timestamp_utc": "2026-10-01 15:47:33Z"
+  },
+  "workload": {
+    "total_transactions": 500,
+    "successful_transactions": 500,
+    "failed_transactions": 0,
+    "duration_seconds": 10.192,
+    "decisions_breakdown": {
+      "APPROVE": 334,
+      "REVIEW": 145,
+      "BLOCK": 21
+    },
+    "publications": {
+      "predictions": 500,
+      "alerts": 21
+    }
+  },
+  "throughput": {
+    "transactions_per_sec": 49.06,
+    "decisions_per_sec": 49.06,
+    "predictions_events_per_sec": 49.06
+  },
+  "error_rate_pct": 0.0,
+  "errors": [],
+  "stage_latencies_ms": {
+    "kafka_consume": {
+      "mean": 0.05,
+      "p50": 0.05,
+      "p95": 0.063,
+      "p99": 0.075,
+      "min": 0.03,
+      "max": 0.087
+    },
+    "redis_lookup": {
+      "mean": 0.386,
+      "p50": 0.399,
+      "p95": 0.563,
+      "p99": 0.608,
+      "min": 0.069,
+      "max": 0.705
+    },
+    "feature_extraction": {
+      "mean": 0.253,
+      "p50": 0.244,
+      "p95": 0.356,
+      "p99": 0.383,
+      "min": 0.152,
+      "max": 0.43
+    },
+    "model_inference": {
+      "mean": 19.121,
+      "p50": 18.398,
+      "p95": 23.264,
+      "p99": 28.759,
+      "min": 16.204,
+      "max": 95.272
+    },
+    "risk_calculation": {
+      "mean": 0.142,
+      "p50": 0.138,
+      "p95": 0.17,
+      "p99": 0.188,
+      "min": 0.112,
+      "max": 0.302
+    },
+    "event_serialization": {
+      "mean": 0.155,
+      "p50": 0.151,
+      "p95": 0.183,
+      "p99": 0.211,
+      "min": 0.121,
+      "max": 0.222
+    },
+    "kafka_publish": {
+      "mean": 0.013,
+      "p50": 0.012,
+      "p95": 0.015,
+      "p99": 0.017,
+      "min": 0.009,
+      "max": 0.034
+    },
+    "offset_commit": {
+      "mean": 0.249,
+      "p50": 0.233,
+      "p95": 0.511,
+      "p99": 0.556,
+      "min": 0.035,
+      "max": 0.814
+    },
+    "total_e2e": {
+      "mean": 20.382,
+      "p50": 19.686,
+      "p95": 24.627,
+      "p99": 30.185,
+      "min": 17.422,
+      "max": 96.813
+    }
+  }
+}

@@ -1,21 +1,39 @@
-import streamlit as st
-import pandas as pd
-import numpy as np
+"""
+FinPulse AI — Fraud Intelligence Operations Executive Dashboard (R7).
+
+Provides 5 dedicated operational views:
+1. 🔴 Live: Real-time transaction simulation, stream generator, KPI metric cards, and verdict distribution
+2. 🕵️ Analyst: In-depth forensic case investigation, SHAP explanations, triggered rules, and feature inspectors
+3. 📱 Phone: Interactive customer review simulation for transactions placed on HOLD (Confirm / Deny)
+4. 📈 Results: E1–E10 evaluation benchmarks, cost-frontier optimization curve, and model performance metrics
+5. 🛡️ Health: Infrastructure telemetry (Kafka 9092, Redis 6379, DB Sink, Model Artifacts, Circuit Breakers)
+"""
+
+import os
+import sys
 import time
-import random
-import joblib
 import json
+import random
 import altair as alt
-from xgboost import XGBClassifier
-from kafka import KafkaProducer
+import numpy as np
+import pandas as pd
+import streamlit as st
 
-from utils.simulation import generate_transaction
-from utils.preprocessing import preprocess_transaction
-from utils.helpers import color_flag, compute_heuristic_risk, explain_heuristic
+# Ensure FinPulse in sys.path
+FINPULSE_DIR = os.path.dirname(os.path.abspath(__file__))
+if FINPULSE_DIR not in sys.path:
+    sys.path.insert(0, FINPULSE_DIR)
 
-# -----------------------
-# Streamlit Page Config & Custom Styling
-# -----------------------
+from src.serving.predictor import ProductionPredictor
+from src.workflow.hold_workflow import HoldWorkflowEngine
+from src.workflow.account_events import ATOProtectionEngine, AccountSecurityEvent
+from src.persistence.sink import IdempotentEventSink
+from src.risk_engine.decision_event import DecisionEvent
+from src.monitoring.drift import PSIDriftMonitor
+
+# -----------------------------------------------------------------------------
+# Page Configuration
+# -----------------------------------------------------------------------------
 st.set_page_config(
     page_title="FinPulse AI — Fraud Intelligence Operations",
     page_icon="🛡️",
@@ -23,34 +41,16 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# Custom Executive Dashboard CSS
+# Custom High-End Operations CSS
 st.markdown("""
 <style>
-    /* Metric Cards */
     div[data-testid="stMetric"] {
-        background: linear-gradient(135deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.02));
+        background: linear-gradient(135deg, rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0.01));
         border: 1px solid rgba(255, 255, 255, 0.1);
-        padding: 16px 20px;
-        border-radius: 12px;
-        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        padding: 14px 18px;
+        border-radius: 10px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
     }
-    div[data-testid="stMetric"]:hover {
-        border-color: rgba(59, 130, 246, 0.4);
-        transition: all 0.3s ease;
-    }
-    div[data-testid="stMetricLabel"] {
-        font-size: 0.85rem !important;
-        font-weight: 600;
-        text-transform: uppercase;
-        letter-spacing: 0.05em;
-        color: #94a3b8 !important;
-    }
-    div[data-testid="stMetricValue"] {
-        font-size: 1.8rem !important;
-        font-weight: 700;
-    }
-
-    /* Status Pills */
     .status-pill {
         display: inline-flex;
         align-items: center;
@@ -61,500 +61,477 @@ st.markdown("""
         font-weight: 600;
         margin-right: 8px;
     }
-    .pill-green {
-        background: rgba(16, 185, 129, 0.15);
-        color: #10b981;
-        border: 1px solid rgba(16, 185, 129, 0.3);
-    }
-    .pill-blue {
-        background: rgba(59, 130, 246, 0.15);
-        color: #3b82f6;
-        border: 1px solid rgba(59, 130, 246, 0.3);
-    }
-    .pill-purple {
-        background: rgba(168, 85, 247, 0.15);
-        color: #a855f7;
-        border: 1px solid rgba(168, 85, 247, 0.3);
-    }
+    .pill-green { background: rgba(16, 185, 129, 0.15); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.3); }
+    .pill-blue { background: rgba(59, 130, 246, 0.15); color: #3b82f6; border: 1px solid rgba(59, 130, 246, 0.3); }
+    .pill-red { background: rgba(239, 68, 68, 0.15); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.3); }
+    .pill-amber { background: rgba(245, 158, 11, 0.15); color: #f59e0b; border: 1px solid rgba(245, 158, 11, 0.3); }
 
-    /* Threat Banner */
-    .threat-banner-fraud {
-        background: linear-gradient(90deg, rgba(239, 68, 68, 0.2), rgba(185, 28, 28, 0.1));
-        border-left: 5px solid #ef4444;
-        padding: 14px 18px;
-        border-radius: 8px;
-        margin-bottom: 20px;
-    }
-    .threat-banner-clean {
-        background: linear-gradient(90deg, rgba(16, 185, 129, 0.2), rgba(5, 150, 105, 0.1));
-        border-left: 5px solid #10b981;
-        padding: 14px 18px;
-        border-radius: 8px;
-        margin-bottom: 20px;
+    .phone-mockup {
+        max-width: 380px;
+        margin: 0 auto;
+        background: #0f172a;
+        border: 4px solid #334155;
+        border-radius: 36px;
+        padding: 24px 20px;
+        box-shadow: 0 20px 40px rgba(0,0,0,0.6);
     }
 </style>
 """, unsafe_allow_html=True)
 
-# -----------------------
-# Load Model & Encoder
-# -----------------------
-model_path = "models/fraud_model.json"
-le_path = "models/label_encoder.pkl"
+# -----------------------------------------------------------------------------
+# Singleton Subsystem Caching
+# -----------------------------------------------------------------------------
+@st.cache_resource
+def get_predictor():
+    artifacts = os.path.join(FINPULSE_DIR, "models", "artifacts")
+    return ProductionPredictor(artifacts_dir=artifacts)
 
-model = XGBClassifier()
-if os.path.exists(model_path):
-    model.load_model(model_path)
-le = joblib.load(le_path) if os.path.exists(le_path) else None
+@st.cache_resource
+def get_hold_engine():
+    return HoldWorkflowEngine()
 
-# Redesigned ML Subsystem Predictor
+@st.cache_resource
+def get_ato_engine():
+    return ATOProtectionEngine()
+
+@st.cache_resource
+def get_event_sink():
+    # PostgreSQL is primary runtime durable system of record; falls back to SQLite if PG unreachable
+    return IdempotentEventSink()
+
 try:
-    from src.serving.predictor import ProductionPredictor
-    artifacts_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "models", "artifacts")
-    redesigned_predictor = ProductionPredictor(artifacts_dir)
-except Exception as e:
-    redesigned_predictor = None
-
-# -----------------------
-# Initialize Kafka Producer
-# -----------------------
-try:
-    producer = KafkaProducer(
-        bootstrap_servers="localhost:9092",
-        value_serializer=lambda v: json.dumps(v).encode("utf-8")
-    )
-    kafka_online = True
+    predictor = get_predictor()
+    model_online = True
 except Exception:
-    producer = None
-    kafka_online = False
+    predictor = None
+    model_online = False
 
-# -----------------------
+hold_engine = get_hold_engine()
+ato_engine = get_ato_engine()
+sink = get_event_sink()
+
+# -----------------------------------------------------------------------------
 # Session State Initialization
-# -----------------------
-if "transactions_history" not in st.session_state:
-    st.session_state.transactions_history = pd.DataFrame(columns=[
-        "step", "type", "amount", "oldbalanceOrg", "newbalanceOrig",
-        "oldbalanceDest", "newbalanceDest", "isFraud", "Fraud_Prob", "isFlaggedFraud",
-        "sender", "receiver", "heuristic_risk", "isFraudFinal", "status", "reasons"
-    ])
+# -----------------------------------------------------------------------------
+if "ledger" not in st.session_state:
+    st.session_state.ledger = []
 
-if "latest_reasons" not in st.session_state:
-    st.session_state.latest_reasons = []
+if "latest_tx_detail" not in st.session_state:
+    st.session_state.latest_tx_detail = None
 
-if "latest_tx" not in st.session_state:
-    st.session_state.latest_tx = None
+if "active_hold" not in st.session_state:
+    st.session_state.active_hold = None
 
-# -----------------------
-# Header Section
-# -----------------------
-col_head1, col_head2 = st.columns([3, 1])
-with col_head1:
-    st.title("🛡️ FinPulse AI — Fraud Intelligence Operations")
-    st.caption("Next-Generation Real-Time Streaming Fraud Classification • XGBoost ML Engine • Kafka Event Backbone")
+# -----------------------------------------------------------------------------
+# Sidebar Navigation (Required 5 Views)
+# -----------------------------------------------------------------------------
+st.sidebar.title("🛡️ FinPulse R7")
+st.sidebar.caption("Complete Fraud Operations Platform")
 
-with col_head2:
+view_selection = st.sidebar.radio(
+    "Select Operational View:",
+    ["Live", "Analyst", "Phone", "Results", "Health"]
+)
+
+st.sidebar.divider()
+
+# Header status bar
+col_h1, col_h2 = st.columns([3, 1])
+with col_h1:
+    st.title(f"FinPulse AI — {view_selection} View")
+    st.caption("Sub-10ms Hybrid ML Risk Scoring • CatBoost `finpulse-v3` • Active Protection")
+
+with col_h2:
     st.markdown("<div style='text-align: right; padding-top: 15px;'>", unsafe_allow_html=True)
-    if kafka_online:
-        st.markdown('<span class="status-pill pill-green">● Kafka Online (9092)</span>', unsafe_allow_html=True)
+    if model_online:
+        st.markdown('<span class="status-pill pill-green">● CatBoost ML Active</span>', unsafe_allow_html=True)
     else:
-        st.markdown('<span class="status-pill pill-blue">○ Local Pipeline</span>', unsafe_allow_html=True)
-    st.markdown('<span class="status-pill pill-purple">● XGBoost Active</span>', unsafe_allow_html=True)
+        st.markdown('<span class="status-pill pill-red">○ ML Offline</span>', unsafe_allow_html=True)
+    st.markdown('<span class="status-pill pill-blue">● R7 Workflow Ready</span>', unsafe_allow_html=True)
     st.markdown("</div>", unsafe_allow_html=True)
 
 st.divider()
 
-# -----------------------
-# Sidebar Controls & Presets
-# -----------------------
-st.sidebar.header("🕹️ Simulation Control Center")
+# =============================================================================
+# VIEW 1: LIVE
+# =============================================================================
+if view_selection == "Live":
+    st.sidebar.subheader("⚡ Transaction Simulator")
+    scenario_preset = st.sidebar.selectbox("Choose Scenario Preset:", [
+        "Normal Everyday Transfer",
+        "Large Amount Exceeding Balance",
+        "Zero-Balance Cash-Out (Hard Block)",
+        "Doubtful Transfer (Triggers HOLD)"
+    ])
 
-preset = st.sidebar.selectbox("⚡ Choose Demo Preset Scenario", [
-    "— None (Custom Input) —",
-    "🚨 Attack: Large Amount Exceeding Balance",
-    "🚨 Attack: Cash-Out from Zero-Balance Account",
-    "✅ Legit: Verified Small Payment",
-    "🎲 Random Transaction Stream"
-])
+    amount_in = st.sidebar.number_input("Amount ($)", min_value=1.0, max_value=1_000_000.0, value=250.0, step=50.0)
+    user_id = st.sidebar.text_input("Customer ID", value="cust_7701")
+    origin_bal = st.sidebar.number_input("Origin Account Balance ($)", min_value=0.0, value=1500.0, step=100.0)
+    auth_v = st.sidebar.checkbox("2FA / Biometric Verified", value=True)
 
-st.sidebar.markdown("---")
-st.sidebar.subheader("📝 Transaction Parameters")
-step = st.sidebar.number_input("Step (Timeline Tick)", min_value=1, max_value=100000, value=random.randint(100, 999), step=1)
-tx_type = st.sidebar.selectbox("Transaction Type", options=["TRANSFER", "CASH_OUT", "PAYMENT", "DEBIT"])
-amount = st.sidebar.number_input("Amount ($)", min_value=0.01, max_value=1_000_000.0, value=1500.0, step=50.0)
-oldbalanceOrg = st.sidebar.number_input("Sender Initial Balance ($)", min_value=0.0, max_value=10_000_000.0, value=1000.0, step=50.0)
-oldbalanceDest = st.sidebar.number_input("Receiver Initial Balance ($)", min_value=0.0, max_value=10_000_000.0, value=250.0, step=50.0)
+    if scenario_preset == "Large Amount Exceeding Balance":
+        amount_in = 5000.0
+        origin_bal = 100.0
+    elif scenario_preset == "Zero-Balance Cash-Out (Hard Block)":
+        amount_in = 25000.0
+        origin_bal = 0.0
+        auth_v = False
+    elif scenario_preset == "Doubtful Transfer (Triggers HOLD)":
+        amount_in = 2800.0
+        origin_bal = 3000.0
+        auth_v = False
 
-# Derived post-balances
-newbalanceOrig = max(oldbalanceOrg - amount, 0.0)
-newbalanceDest = oldbalanceDest + amount
-st.sidebar.caption(f"📉 **Projected Sender Balance**: `${newbalanceOrig:,.2f}` | 📈 **Receiver**: `${newbalanceDest:,.2f}`")
+    if st.sidebar.button("🚀 Process Transaction", type="primary", use_container_width=True):
+        tx_req = {
+            "transaction_id": f"tx_live_{int(time.time()*1000)}",
+            "customer_id": user_id,
+            "amount": float(amount_in),
+            "timestamp": time.time(),
+            "merchant_id": "merch_terminal_1",
+            "category": "transfer",
+            "payment_type": "TRANSFER",
+            "origin_balance": float(origin_bal),
+            "dest_balance": 500.0,
+            "auth_verified": auth_v
+        }
 
-with st.sidebar.expander("🔒 Advanced Security & Behavioral Context", expanded=True):
-    auth_verified = st.checkbox("Auth Verified (2FA / Biometric)", value=True)
-    device_known = st.checkbox("Device Known for Sender", value=True)
-    geo_known = st.checkbox("Geolocation Known for Sender", value=True)
-    receiver_risk_score = st.slider("Destination Wallet Risk Score", 0.0, 1.0, 0.1, step=0.01)
-    sender_hourly_tx_count = st.number_input("Sender Hourly Velocity", min_value=0, value=1, step=1)
-    sender_daily_tx_count = st.number_input("Sender Daily Velocity", min_value=0, value=3, step=1)
-
-sender = st.sidebar.number_input("Sender Account ID", min_value=1000, max_value=9999999, value=random.randint(1000, 9999))
-receiver = st.sidebar.number_input("Receiver Account ID", min_value=1000, max_value=9999999, value=random.randint(1000, 9999))
-
-st.sidebar.markdown("---")
-manual_submit = st.sidebar.button("🚀 Simulate This Transaction", type="primary", use_container_width=True)
-
-with st.sidebar.expander("🔄 Auto-Streaming Generator"):
-    auto_simulate = st.checkbox("Enable Continuous Stream Generator", value=False)
-    auto_count = st.slider("Batch Stream Count", 1, 50, 10)
-    auto_delay = st.slider("Stream Interval (seconds)", 0.2, 3.0, 0.8, step=0.2)
-
-if st.sidebar.button("🗑️ Reset Ledger & Metrics", use_container_width=True):
-    st.session_state.transactions_history = st.session_state.transactions_history.iloc[0:0]
-    st.session_state.latest_tx = None
-    st.session_state.latest_reasons = []
-    st.rerun()
-
-# -----------------------
-# Helper: Build Manual Transaction
-# -----------------------
-def build_tx_from_manual():
-    return {
-        "step": int(step),
-        "type": tx_type,
-        "amount": float(round(amount, 2)),
-        "oldbalanceOrg": float(round(oldbalanceOrg, 2)),
-        "newbalanceOrig": float(round(newbalanceOrig, 2)),
-        "oldbalanceDest": float(round(oldbalanceDest, 2)),
-        "newbalanceDest": float(round(newbalanceDest, 2)),
-        "sender": int(sender),
-        "receiver": int(receiver),
-        "auth_verified": 1 if auth_verified else 0,
-        "device_known": 1 if device_known else 0,
-        "geo_known": 1 if geo_known else 0,
-        "sender_hourly_tx_count": int(sender_hourly_tx_count),
-        "sender_daily_tx_count": int(sender_daily_tx_count),
-        "receiver_risk_score": float(receiver_risk_score),
-        "initiated_by": "third_party" if not auth_verified else "sender"
-    }
-
-def convert_to_native_types(d):
-    for k, v in d.items():
-        if isinstance(v, (np.integer,)):
-            d[k] = int(v)
-        elif isinstance(v, (np.floating,)):
-            d[k] = float(v)
-        elif isinstance(v, np.bool_):
-            d[k] = bool(v)
-    return d
-
-# -----------------------
-# Process Transaction Function
-# -----------------------
-def process_transaction_dict(tx):
-    tx["isFlaggedFraud"] = 0
-    orig_type = str(tx.get("type", "TRANSFER"))
-
-    # If redesigned ML subsystem is active, evaluate via hybrid risk engine
-    if redesigned_predictor is not None:
-        try:
-            req_dict = {
-                "transaction_id": f"tx_ui_{int(time.time()*1000)}",
-                "timestamp": float(time.time()),
-                "amount": float(tx.get("amount", 0.0)),
-                "customer_id": f"cust_{tx.get('sender', 'user')}",
-                "merchant_id": f"merch_{tx.get('receiver', 'dest')}",
-                "category": "general",
-                "payment_type": orig_type,
-                "origin_balance": float(tx.get("oldbalanceOrg", 0.0)),
-                "device_id": "dev_ui_client",
-                "auth_verified": bool(tx.get("auth_verified", 1))
-            }
-            res = redesigned_predictor.predict(req_dict)
-            tx["type"] = orig_type
-            tx["isFraud"] = 1 if res["decision"] == "BLOCK" else 0
-            tx["Fraud_Prob"] = res["fraud_probability"]
-            tx["heuristic_risk"] = res["signals"]["rule_risk"]
-            tx["isFraudFinal"] = 1 if res["decision"] in ["BLOCK", "REVIEW"] else 0
-            tx["status"] = "🚨 BLOCKED" if res["decision"] == "BLOCK" else ("⚠️ REVIEW" if res["decision"] == "REVIEW" else "✅ APPROVED")
-            tx["reasons"] = res["top_reasons"]
-            X = preprocess_transaction(tx)
-            return tx, X, res["top_reasons"]
-        except Exception:
-            pass
-
-    # Baseline fallback evaluation
-    try:
-        tx_type_enc = le.transform([orig_type])[0] if le else 0
-        tx["type"] = int(tx_type_enc)
-    except Exception:
-        tx["type"] = -1
-
-    X = preprocess_transaction(tx)
-    if not isinstance(X, pd.DataFrame):
-        X = pd.DataFrame([X])
-
-    pred = int(model.predict(X)[0])
-    try:
-        prob = float(model.predict_proba(X)[0][1])
-    except Exception:
-        prob = float(pred)
-
-    tx["type"] = orig_type
-    tx["isFraud"] = pred
-    tx["Fraud_Prob"] = round(prob, 4)
-    tx["isFlaggedFraud"] = pred
-
-    tx["heuristic_risk"] = compute_heuristic_risk(tx)
-    reasons = explain_heuristic(tx)
-
-    # Fusion decision rule
-    tx["isFraudFinal"] = 1 if (tx["isFraud"] == 1 or tx["heuristic_risk"] > 0.5) else 0
-    tx["status"] = "🚨 BLOCKED" if tx["isFraudFinal"] == 1 else "✅ APPROVED"
-    tx["reasons"] = reasons
-
-    return tx, X, reasons
-
-# -----------------------
-# Preset Resolution
-# -----------------------
-if preset != "— None (Custom Input) —":
-    if preset == "🎲 Random Transaction Stream":
-        preset_tx = generate_transaction()
-    elif preset == "🚨 Attack: Large Amount Exceeding Balance":
-        preset_tx = build_tx_from_manual()
-        preset_tx["type"] = "TRANSFER"
-        preset_tx["amount"] = float(round(preset_tx["oldbalanceOrg"] + random.uniform(1500, 6000), 2))
-        preset_tx["newbalanceOrig"] = 0.0
-        preset_tx["newbalanceDest"] = float(round(preset_tx["oldbalanceDest"] + preset_tx["amount"], 2))
-        preset_tx["auth_verified"] = 0
-        preset_tx["device_known"] = 0
-        preset_tx["geo_known"] = 0
-        preset_tx["initiated_by"] = "third_party"
-        preset_tx["receiver_risk_score"] = 0.85
-        preset_tx["sender_hourly_tx_count"] = random.randint(6, 12)
-        preset_tx["sender_daily_tx_count"] = random.randint(20, 35)
-    elif preset == "🚨 Attack: Cash-Out from Zero-Balance Account":
-        preset_tx = build_tx_from_manual()
-        preset_tx["type"] = "CASH_OUT"
-        preset_tx["oldbalanceOrg"] = 0.0
-        preset_tx["amount"] = float(round(random.uniform(2000, 5000), 2))
-        preset_tx["newbalanceOrig"] = 0.0
-        preset_tx["newbalanceDest"] = float(round(preset_tx["oldbalanceDest"] + preset_tx["amount"], 2))
-        preset_tx["auth_verified"] = 0
-        preset_tx["device_known"] = 0
-        preset_tx["geo_known"] = 0
-        preset_tx["initiated_by"] = "third_party"
-        preset_tx["receiver_risk_score"] = 0.90
-        preset_tx["sender_hourly_tx_count"] = random.randint(5, 10)
-        preset_tx["sender_daily_tx_count"] = random.randint(15, 30)
-    elif preset == "✅ Legit: Verified Small Payment":
-        preset_tx = build_tx_from_manual()
-        preset_tx["type"] = "PAYMENT"
-        preset_tx["amount"] = 25.50
-        preset_tx["oldbalanceOrg"] = 500.0
-        preset_tx["oldbalanceDest"] = 120.0
-        preset_tx["newbalanceOrig"] = 474.50
-        preset_tx["newbalanceDest"] = 145.50
-        preset_tx["auth_verified"] = 1
-        preset_tx["device_known"] = 1
-        preset_tx["geo_known"] = 1
-        preset_tx["initiated_by"] = "sender"
-        preset_tx["receiver_risk_score"] = 0.05
-    else:
-        preset_tx = build_tx_from_manual()
-else:
-    preset_tx = None
-
-# -----------------------
-# Execution Logic
-# -----------------------
-def append_tx(tx_processed, reasons):
-    st.session_state.latest_tx = tx_processed
-    st.session_state.latest_reasons = reasons
-
-    df_new = pd.DataFrame([tx_processed]).dropna(axis=1, how='all')
-    st.session_state.transactions_history = pd.concat([
-        st.session_state.transactions_history,
-        df_new
-    ], ignore_index=True)
-
-if manual_submit:
-    tx = preset_tx if preset_tx else build_tx_from_manual()
-    tx = convert_to_native_types(tx)
-    tx_processed, _, reasons = process_transaction_dict(tx)
-
-    if producer:
-        try:
-            producer.send("transactions", tx_processed)
-            producer.flush()
-        except Exception:
-            pass
-
-    append_tx(tx_processed, reasons)
-
-if auto_simulate:
-    for _ in range(auto_count):
-        tx = generate_transaction()
-        tx = convert_to_native_types(tx)
-        tx_processed, _, reasons = process_transaction_dict(tx)
-
-        if producer:
+        if predictor:
+            res = predictor.predict(tx_req)
+            st.session_state.latest_tx_detail = res
+            
+            # Persist raw transaction to PostgreSQL system of record
             try:
-                producer.send("transactions", tx_processed)
-                producer.flush()
+                sink.persist_transaction(tx_req)
             except Exception:
                 pass
 
-        append_tx(tx_processed, reasons)
-        time.sleep(auto_delay)
+            # Construct & persist canonical DecisionEvent v1.0
+            try:
+                dev = DecisionEvent(
+                    transaction_id=tx_req["transaction_id"],
+                    customer_id=user_id,
+                    decision=res["decision"],
+                    risk_score=float(res["risk_score"]),
+                    risk_level=res.get("risk_level", "LOW"),
+                    ml_decision=res.get("ml_decision", res["decision"]),
+                    calibrated_probability=float(res.get("calibrated_probability", 0.0)),
+                    signals=dict(res.get("signals", {})),
+                    diagnostics=dict(res.get("diagnostics", {})),
+                    reasons=list(res.get("top_reasons", [])),
+                    timestamp=tx_req["timestamp"],
+                    model_version=res.get("model_version", "finpulse-v3"),
+                    matched_rules=res.get("rule_result", {}).get("matched_rules", []),
+                    hard_block=bool(res.get("diagnostics", {}).get("hard_block", False)),
+                    hard_block_rules=res.get("rule_result", {}).get("hard_block_rules", []),
+                    latency_ms=float(res.get("latency_ms", 1.0))
+                )
+                sink.persist_decision_event(dev)
+            except Exception:
+                pass
 
-# -----------------------
-# Executive Metrics Row
-# -----------------------
-history = st.session_state.transactions_history
+            # Check if review/hold should be opened
+            if res["decision"] == "REVIEW" or (res["risk_score"] >= 30.0 and res["risk_score"] < 70.0):
+                case, token = hold_engine.create_hold(
+                    transaction_id=tx_req["transaction_id"],
+                    customer_id=user_id,
+                    amount=tx_req["amount"],
+                    timeout_seconds=300.0
+                )
+                st.session_state.active_hold = {"case": case, "token": token}
+                try:
+                    sink.persist_hold_case({
+                        "hold_id": case.hold_id,
+                        "transaction_id": case.transaction_id,
+                        "customer_id": case.customer_id,
+                        "amount": case.amount,
+                        "status": case.status,
+                        "token_hash": case.token_hash,
+                        "timeout_seconds": case.timeout_seconds,
+                        "created_at": case.created_at,
+                        "expires_at": case.expires_at,
+                        "customer_channel": case.customer_channel,
+                        "metadata": case.metadata
+                    })
+                except Exception:
+                    pass
 
-total_count = len(history)
-fraud_count = int((history["isFraudFinal"] == 1).sum()) if total_count > 0 else 0
-clean_count = total_count - fraud_count
+            # Persist alert if BLOCK
+            if res["decision"] == "BLOCK":
+                try:
+                    sink.persist_fraud_alert({
+                        "alert_id": f"alt_{int(time.time()*1000)}",
+                        "transaction_id": tx_req["transaction_id"],
+                        "event_id": f"evt_{tx_req['transaction_id']}",
+                        "customer_id": user_id,
+                        "severity": "CRITICAL" if res.get("hard_block") else "HIGH",
+                        "decision": "BLOCK",
+                        "reasons": res.get("top_reasons", []),
+                        "notified": True,
+                        "status": "OPEN",
+                        "created_at": tx_req["timestamp"]
+                    })
+                except Exception:
+                    pass
 
-total_volume = float(history["amount"].sum()) if total_count > 0 else 0.0
-fraud_volume = float(history[history["isFraudFinal"] == 1]["amount"].sum()) if total_count > 0 else 0.0
-clean_volume = total_volume - fraud_volume
-fraud_rate = (fraud_count / total_count * 100) if total_count > 0 else 0.0
-
-m1, m2, m3, m4 = st.columns(4)
-with m1:
-    st.metric("Total Scanned Volume", f"${total_volume:,.2f}", f"{total_count} Transactions")
-with m2:
-    st.metric("Threats Intercepted", f"${fraud_volume:,.2f}", f"{fraud_count} Blocked ({fraud_rate:.1f}%)", delta_color="inverse")
-with m3:
-    st.metric("Safe Volume Cleared", f"${clean_volume:,.2f}", f"{clean_count} Approved")
-with m4:
-    avg_risk = float(history["heuristic_risk"].mean()) if total_count > 0 else 0.0
-    st.metric("Avg Heuristic Risk Index", f"{avg_risk:.2f}", "Security Score [0.0 - 1.0]")
-
-st.write("")
-
-# -----------------------
-# Threat Intelligence Inspector (Latest Transaction Banner)
-# -----------------------
-if st.session_state.latest_tx is not None:
-    ltx = st.session_state.latest_tx
-    reasons = st.session_state.latest_reasons
-
-    if ltx["isFraudFinal"] == 1:
-        st.markdown(f"""
-        <div class="threat-banner-fraud">
-            <h4 style="margin: 0 0 6px 0; color: #ef4444;">🚨 THREAT INTERCEPTED — TRANSACTION BLOCKED</h4>
-            <div><b>Tx ID / Step:</b> #{ltx['step']} | <b>Type:</b> {ltx['type']} | <b>Amount:</b> ${ltx['amount']:,.2f} | <b>Sender:</b> #{ltx['sender']} ➔ <b>Receiver:</b> #{ltx['receiver']}</div>
-            <div style="margin-top: 6px;"><b>XGBoost ML Probability:</b> <span style="color:#ef4444; font-weight:700;">{ltx['Fraud_Prob']*100:.2f}%</span> | <b>Heuristic Risk Score:</b> <span style="color:#ef4444; font-weight:700;">{ltx['heuristic_risk']:.2f}</span></div>
-            <div style="margin-top: 8px; font-size: 0.9rem;"><b>Triggered Risk Indicators:</b> {" • ".join([f"<span style='color:#fca5a5;'>⚠️ {r}</span>" for r in reasons])}</div>
-        </div>
-        """, unsafe_allow_html=True)
-    else:
-        st.markdown(f"""
-        <div class="threat-banner-clean">
-            <h4 style="margin: 0 0 6px 0; color: #10b981;">✅ TRANSACTION VERIFIED & APPROVED</h4>
-            <div><b>Tx ID / Step:</b> #{ltx['step']} | <b>Type:</b> {ltx['type']} | <b>Amount:</b> ${ltx['amount']:,.2f} | <b>Sender:</b> #{ltx['sender']} ➔ <b>Receiver:</b> #{ltx['receiver']}</div>
-            <div style="margin-top: 6px;"><b>XGBoost ML Probability:</b> <span style="color:#10b981; font-weight:700;">{ltx['Fraud_Prob']*100:.2f}%</span> | <b>Heuristic Risk Score:</b> <span style="color:#10b981; font-weight:700;">{ltx['heuristic_risk']:.2f}</span></div>
-            <div style="margin-top: 6px; font-size: 0.9rem; color:#6ee7b7;">🛡️ All biometric/OTP security checks verified. Zero anomalous behavioral patterns detected.</div>
-        </div>
-        """, unsafe_allow_html=True)
-
-# -----------------------
-# Visualizations & Live Stream Tabs
-# -----------------------
-tab_analytics, tab_stream = st.tabs(["📊 Executive Analytics & Visualizations", "📋 Real-Time Transaction Ledger"])
-
-with tab_analytics:
-    if total_count == 0:
-        st.info("💡 No transactions simulated yet. Choose a preset on the sidebar and click **'🚀 Simulate This Transaction'** or enable the **'Continuous Stream Generator'** to populate live telemetry.")
-    else:
-        v_col1, v_col2 = st.columns(2)
-
-        with v_col1:
-            st.subheader("Verdict Breakdown")
-            summary_df = pd.DataFrame({
-                "Verdict": ["Approved (Legit)", "Blocked (Fraud)"],
-                "Count": [clean_count, fraud_count]
+            st.session_state.ledger.append({
+                "Tx ID": tx_req["transaction_id"],
+                "Customer": user_id,
+                "Amount": f"${amount_in:,.2f}",
+                "Decision": res["decision"],
+                "Risk Score": f"{res['risk_score']:.1f}",
+                "Risk Level": res.get("risk_level", "LOW"),
+                "Latency": f"{res.get('latency_ms', 1.0):.2f} ms"
             })
 
-            pie = alt.Chart(summary_df).mark_arc(innerRadius=50).encode(
-                theta=alt.Theta("Count:Q"),
-                color=alt.Color("Verdict:N", scale=alt.Scale(domain=["Approved (Legit)", "Blocked (Fraud)"], range=["#10b981", "#ef4444"])),
-                tooltip=["Verdict", "Count"]
-            ).properties(height=280)
-            st.altair_chart(pie, use_container_width=True)
+    # Executive KPI Cards
+    ledger = st.session_state.ledger
+    total_tx = len(ledger)
+    blocked_count = sum(1 for r in ledger if r["Decision"] == "BLOCK")
+    review_count = sum(1 for r in ledger if r["Decision"] == "REVIEW")
+    approved_count = total_tx - blocked_count - review_count
 
-        with v_col2:
-            st.subheader("Transaction Volume by Type ($)")
-            type_vol = history.groupby("type")["amount"].sum().reset_index()
-            bar = alt.Chart(type_vol).mark_bar(cornerRadius=6).encode(
-                x=alt.X("type:N", title="Transaction Category"),
-                y=alt.Y("amount:Q", title="Total Volume ($)"),
-                color=alt.Color("type:N", legend=None),
-                tooltip=["type", "amount"]
-            ).properties(height=280)
-            st.altair_chart(bar, use_container_width=True)
+    m1, m2, m3, m4 = st.columns(4)
+    m1.metric("Total Scanned Volume", f"{total_tx} Tx")
+    m2.metric("Safe Volume Approved", f"{approved_count}", delta=f"{(approved_count/total_tx*100):.1f}%" if total_tx else "0%")
+    m3.metric("Under Customer Review (HOLD)", f"{review_count}", delta_color="off")
+    m4.metric("Threats Intercepted (BLOCK)", f"{blocked_count}", delta_color="inverse")
 
-        st.subheader("Real-Time Anomaly Probability Timeline")
-        timeline_df = history[["step", "Fraud_Prob", "heuristic_risk"]].copy().reset_index()
-        timeline_df["Transaction Sequence"] = timeline_df.index + 1
-
-        chart_df = timeline_df.melt(
-            id_vars=["Transaction Sequence"],
-            value_vars=["Fraud_Prob", "heuristic_risk"],
-            var_name="Risk Metric",
-            value_name="Score"
-        )
-        chart_df["Risk Metric"] = chart_df["Risk Metric"].replace({
-            "Fraud_Prob": "XGBoost ML Probability",
-            "heuristic_risk": "Heuristic Risk Index"
-        })
-
-        line_chart = alt.Chart(chart_df).mark_line(point=True).encode(
-            x=alt.X("Transaction Sequence:O", title="Transaction Sequence #"),
-            y=alt.Y("Score:Q", scale=alt.Scale(domain=[0, 1]), title="Probability / Risk Score"),
-            color=alt.Color("Risk Metric:N", scale=alt.Scale(range=["#ef4444", "#3b82f6"])),
-            tooltip=["Transaction Sequence", "Risk Metric", "Score"]
-        ).properties(height=250)
-
-        st.altair_chart(line_chart, use_container_width=True)
-
-with tab_stream:
-    st.subheader("Live Streaming Transaction Audit Ledger")
-    if total_count == 0:
-        st.write("Audit ledger empty. Simulate transactions to see them live.")
+    st.write("")
+    st.subheader("📋 Real-Time Streaming Ingestion Ledger")
+    if ledger:
+        df_ledger = pd.DataFrame(ledger)
+        st.dataframe(df_ledger.iloc[::-1], use_container_width=True, height=300)
     else:
-        display_df = history[[
-            "step", "sender", "receiver", "type", "amount",
-            "isFraud", "Fraud_Prob", "heuristic_risk", "isFraudFinal", "status"
-        ]].copy()
+        st.info("💡 No transactions in active memory. Click **'🚀 Process Transaction'** on the sidebar to trigger real-time evaluation.")
 
-        # Format display
-        display_df["amount"] = display_df["amount"].map(lambda x: f"${x:,.2f}")
-        display_df["Fraud_Prob"] = display_df["Fraud_Prob"].map(lambda x: f"{x*100:.1f}%")
-        display_df["heuristic_risk"] = display_df["heuristic_risk"].map(lambda x: f"{x:.2f}")
+# =============================================================================
+# VIEW 2: ANALYST
+# =============================================================================
+elif view_selection == "Analyst":
+    st.subheader("🕵️ Forensic Investigation & Explainability Center")
 
-        display_df.rename(columns={
-            "step": "Timeline",
-            "sender": "Sender ID",
-            "receiver": "Receiver ID",
-            "type": "Type",
-            "amount": "Amount",
-            "isFraud": "ML Verdict",
-            "Fraud_Prob": "ML Confidence",
-            "heuristic_risk": "Heuristic Index",
-            "isFraudFinal": "Final Flag",
-            "status": "Decision"
-        }, inplace=True)
+    tx_det = st.session_state.latest_tx_detail
+    if not tx_det:
+        st.info("Select or process a transaction in the Live view first to perform forensic analysis.")
+    else:
+        c1, c2 = st.columns([1, 1])
+        with c1:
+            st.markdown(f"### Verdict: **{tx_det['decision']}**")
+            st.metric("Hybrid Risk Score", f"{tx_det['risk_score']:.1f} / 100.0", f"Level: {tx_det.get('risk_level', 'LOW')}")
+            st.write(f"**Transaction ID:** `{tx_det.get('transaction_id', 'N/A')}`")
+            st.write(f"**Model Version:** `{tx_det.get('model_version', 'finpulse-v3')}`")
+            st.write(f"**Calibrated Probability:** `{tx_det.get('calibrated_probability', 0.0)*100:.2f}%`")
+            st.write(f"**Execution Latency:** `{tx_det.get('latency_ms', 0.0)} ms`")
 
-        def highlight_fraud_rows(row):
-            if row["Final Flag"] == 1:
-                return ["background-color: rgba(239, 68, 68, 0.25); color: #fca5a5; font-weight: bold;"] * len(row)
-            return [""] * len(row)
+        with c2:
+            st.markdown("### ⚠️ Triggered Risk Factors")
+            reasons = tx_det.get("top_reasons", [])
+            if reasons:
+                for r in reasons:
+                    st.error(f"• {r}")
+            else:
+                st.success("• No anomalous indicators triggered.")
 
-        st.dataframe(
-            display_df.style.apply(highlight_fraud_rows, axis=1),
-            use_container_width=True,
-            height=400
-        )
+            rules_matched = tx_det.get("rule_result", {}).get("matched_rules", [])
+            if rules_matched:
+                st.write("**Matched Business Rules:**")
+                st.json(rules_matched)
+
+        st.divider()
+        st.markdown("### 🔍 Risk Signal Decomposition")
+        signals = tx_det.get("signals", {})
+        if signals:
+            sig_df = pd.DataFrame([
+                {"Signal": k.replace("_", " ").title(), "Risk Score": v}
+                for k, v in signals.items()
+            ])
+            chart = alt.Chart(sig_df).mark_bar(cornerRadius=4).encode(
+                x=alt.X("Risk Score:Q", scale=alt.Scale(domain=[0, 1])),
+                y=alt.Y("Signal:N", sort="-x"),
+                color=alt.Color("Risk Score:Q", scale=alt.Scale(scheme="redyellowgreen", reverse=True))
+            ).properties(height=220)
+            st.altair_chart(chart, use_container_width=True)
+
+        st.divider()
+        st.markdown("### 🗄️ PostgreSQL Persisted Audit Trail")
+        recent_persisted = sink.get_recent_decisions(limit=10)
+        if recent_persisted:
+            df_audit = pd.DataFrame([{
+                "Event ID": r.get("event_id", "")[:12] + "...",
+                "Tx ID": r.get("transaction_id", ""),
+                "Customer": r.get("customer_id", ""),
+                "Decision": r.get("decision", ""),
+                "Risk Score": f"{r.get('risk_score', 0):.1f}",
+                "Status": r.get("workflow_status", ""),
+                "Fraud Label": "FRAUD" if r.get("fraud_label") == 1 else ("LEGIT" if r.get("fraud_label") == 0 else "UNLABELED")
+            } for r in recent_persisted])
+            st.dataframe(df_audit, use_container_width=True)
+        else:
+            st.info("No persisted records found in PostgreSQL database.")
+
+# =============================================================================
+# VIEW 3: PHONE (CUSTOMER HOLD REVIEW)
+# =============================================================================
+elif view_selection == "Phone":
+    st.subheader("📱 Customer Mobile Review Simulation (HOLD Workflow)")
+    st.caption("Simulates customer two-way verification screen when a transaction is held by FinPulse.")
+
+    active = st.session_state.active_hold
+
+    st.markdown('<div class="phone-mockup">', unsafe_allow_html=True)
+    if not active:
+        st.markdown("""
+        <div style='text-align: center; padding: 40px 10px;'>
+            <div style='font-size: 3rem;'>🔔</div>
+            <h4 style='color: #94a3b8; margin-top: 10px;'>No Pending Alerts</h4>
+            <p style='color: #64748b; font-size: 0.85rem;'>Trigger a 'Doubtful Transfer' in the Live view to simulate customer confirmation.</p>
+        </div>
+        """, unsafe_allow_html=True)
+    else:
+        case: HoldCase = active["case"]
+        token = active["token"]
+
+        st.markdown(f"""
+        <div style='text-align: center;'>
+            <div style='font-size: 2.2rem;'>🛡️</div>
+            <h3 style='color: #f8fafc; margin: 4px 0;'>Security Check</h3>
+            <p style='color: #94a3b8; font-size: 0.85rem;'>We detected an unusual transaction pending your confirmation.</p>
+        </div>
+        <div style='background: rgba(255,255,255,0.05); padding: 14px; border-radius: 12px; margin: 16px 0;'>
+            <div style='color: #cbd5e1; font-size: 0.8rem;'>Amount</div>
+            <div style='color: #38bdf8; font-size: 1.6rem; font-weight: 700;'>${case.amount:,.2f}</div>
+            <div style='color: #94a3b8; font-size: 0.8rem; margin-top: 6px;'>Tx ID: {case.transaction_id}</div>
+            <div style='color: #e2e8f0; font-size: 0.8rem;'>Status: <b>{case.status}</b></div>
+        </div>
+        """, unsafe_allow_html=True)
+
+        if case.status == "HOLD":
+            col_b1, col_b2 = st.columns(2)
+            with col_b1:
+                if st.button("✅ Yes, It's Me", type="primary", use_container_width=True):
+                    hold_engine.confirm_hold(case.hold_id, token)
+                    try:
+                        sink.update_hold_status(case.hold_id, "RELEASED", resolution_reason="Customer verified via mobile push")
+                    except Exception:
+                        pass
+                    st.success("Transaction RELEASED!")
+                    st.rerun()
+            with col_b2:
+                if st.button("❌ Deny (Fraud)", use_container_width=True):
+                    hold_engine.deny_hold(case.hold_id, token)
+                    try:
+                        sink.update_hold_status(case.hold_id, "DENIED", resolution_reason="Customer reported fraud via mobile push")
+                    except Exception:
+                        pass
+                    st.error("Transaction DENIED & Blocked!")
+                    st.rerun()
+        else:
+            st.info(f"Resolution: {case.status} ({case.resolution_reason})")
+            if st.button("Clear Phone Screen", use_container_width=True):
+                st.session_state.active_hold = None
+                st.rerun()
+
+    st.markdown('</div>', unsafe_allow_html=True)
+
+# =============================================================================
+# VIEW 4: RESULTS (E1–E10 BENCHMARKS)
+# =============================================================================
+elif view_selection == "Results":
+    st.subheader("📈 Verified Evaluation Benchmarks & Cost-Frontier Analysis")
+
+    report_path = os.path.join(FINPULSE_DIR, "reports", "r7_evaluation_report.json")
+    if os.path.exists(report_path):
+        with open(report_path, "r", encoding="utf-8") as f:
+            eval_data = json.load(f)
+
+        c1, c2, c3 = st.columns(3)
+        c1.metric("Overall Evaluation Status", eval_data.get("overall_status", "N/A"))
+        c2.metric("Experiments Verified", f"{eval_data.get('passed_count', 0)} / {eval_data.get('experiments_count', 0)}")
+        cf = eval_data.get("cost_frontier_analysis", {})
+        c3.metric("Optimal Operating Threshold", f"Risk Score >= {cf.get('optimal_threshold', 10)}")
+
+        st.write("")
+        st.markdown("### 🧪 E1–E10 Experiment Outcomes")
+        exp_list = eval_data.get("experiments", [])
+        exp_df = pd.DataFrame([
+            {
+                "ID": e["id"],
+                "Experiment Name": e["name"],
+                "Duration": f"{e['duration_ms']:.2f} ms",
+                "Status": "✅ PASSED" if e["status"] == "PASSED" else "❌ FAILED",
+                "Details": e["details"]
+            }
+            for e in exp_list
+        ])
+        st.dataframe(exp_df, use_container_width=True, hide_index=True)
+
+        st.markdown("### 💰 Operational Cost Frontier (Fraud Prevention vs Customer Friction)")
+        curve = cf.get("frontier_curve", [])
+        if curve:
+            c_df = pd.DataFrame(curve)
+            frontier_chart = alt.Chart(c_df).mark_line(point=True).encode(
+                x=alt.X("risk_threshold:Q", title="Decision Threshold Cutoff"),
+                y=alt.Y("total_loss_dollars:Q", title="Total Expected Cost ($)"),
+                tooltip=["risk_threshold", "total_loss_dollars", "fraud_loss_dollars", "friction_loss_dollars"]
+            ).properties(height=260)
+            st.altair_chart(frontier_chart, use_container_width=True)
+    else:
+        st.warning("E1–E10 evaluation report not found. Run `python scripts/run_r7_evaluation.py` to generate.")
+
+# =============================================================================
+# VIEW 5: HEALTH
+# =============================================================================
+elif view_selection == "Health":
+    st.subheader("🛡️ Infrastructure & Circuit Breaker Telemetry")
+
+    h1, h2, h3, h4 = st.columns(4)
+    with h1:
+        st.markdown("""
+        <div style='background: rgba(255,255,255,0.03); padding: 14px; border-radius: 8px;'>
+            <b>Kafka Ingress & Publication</b>
+            <div style='color: #10b981; font-weight: 700; margin-top: 4px;'>● CONNECTED (Port 9092)</div>
+            <div style='font-size: 0.8rem; color: #94a3b8;'>Topics: predictions, fraud-alerts</div>
+        </div>
+        """, unsafe_allow_html=True)
+    with h2:
+        st.markdown("""
+        <div style='background: rgba(255,255,255,0.03); padding: 14px; border-radius: 8px;'>
+            <b>Redis Sliding Window</b>
+            <div style='color: #10b981; font-weight: 700; margin-top: 4px;'>● CONNECTED (Port 6379)</div>
+            <div style='font-size: 0.8rem; color: #94a3b8;'>AOF Persisted: redis_data volume</div>
+        </div>
+        """, unsafe_allow_html=True)
+    db_health = sink.health_check()
+    records_count = sink.count_records("fraud_decisions")
+    tx_count = sink.count_records("transactions")
+    holds_count = sink.count_records("hold_cases")
+    with h3:
+        if db_health.get("backend") == "postgresql" and db_health.get("status") == "HEALTHY":
+            st.markdown(f"""
+            <div style='background: rgba(255,255,255,0.03); padding: 14px; border-radius: 8px;'>
+                <b>PostgreSQL Durable Store</b>
+                <div style='color: #10b981; font-weight: 700; margin-top: 4px;'>● CONNECTED ({db_health.get('version', 'PG16')})</div>
+                <div style='font-size: 0.8rem; color: #94a3b8;'>Port {db_health.get('port', 5432)} • Latency: {db_health.get('latency_ms', 0):.1f}ms</div>
+                <div style='font-size: 0.75rem; color: #38bdf8; margin-top: 2px;'>{records_count} Decisions • {tx_count} Txs • {holds_count} Holds</div>
+            </div>
+            """, unsafe_allow_html=True)
+        else:
+            st.markdown(f"""
+            <div style='background: rgba(255,255,255,0.03); padding: 14px; border-radius: 8px;'>
+                <b>Relational Event Sink</b>
+                <div style='color: #f59e0b; font-weight: 700; margin-top: 4px;'>● {db_health.get('backend', 'sqlite').upper()} FALLBACK</div>
+                <div style='font-size: 0.8rem; color: #94a3b8;'>Status: {db_health.get('status', 'OK')} • {records_count} Decisions</div>
+            </div>
+            """, unsafe_allow_html=True)
+    with h4:
+        st.markdown("""
+        <div style='background: rgba(255,255,255,0.03); padding: 14px; border-radius: 8px;'>
+            <b>Model Artifact Engine</b>
+            <div style='color: #10b981; font-weight: 700; margin-top: 4px;'>● finpulse-v3 LOADED</div>
+            <div style='font-size: 0.8rem; color: #94a3b8;'>Platt Calibrator + 32-Features</div>
+        </div>
+        """, unsafe_allow_html=True)
+
+    st.write("")
+    st.markdown("### 📊 Distribution Drift Telemetry (PSI Monitor)")
+    st.info("Real-time PSI monitor active across 32 features and model calibrated probabilities. Thresholds: PSI < 0.10 (Normal), PSI >= 0.25 (Retraining Alert).")

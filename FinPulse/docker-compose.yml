@@ -3,6 +3,7 @@ version: '3.8'
 services:
   zookeeper:
     image: confluentinc/cp-zookeeper:7.4.0
+    restart: unless-stopped
     environment:
       ZOOKEEPER_CLIENT_PORT: 2181
       ZOOKEEPER_TICK_TIME: 2000
@@ -11,6 +12,7 @@ services:
 
   kafka:
     image: confluentinc/cp-kafka:7.4.0
+    restart: unless-stopped
     depends_on:
       - zookeeper
     ports:
@@ -26,43 +28,130 @@ services:
 
   redis:
     image: redis:7.2-alpine
+    restart: unless-stopped
     ports:
       - "6379:6379"
     command: redis-server --appendonly yes
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  postgres:
+    image: postgres:16-alpine
+    container_name: finpulse-postgres
+    restart: unless-stopped
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-finpulse}
+      POSTGRES_USER: ${POSTGRES_USER:-finpulse_admin}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-finpulse_secret_2026}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-finpulse_admin} -d ${POSTGRES_DB:-finpulse}"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
 
   finpulse-api:
     build:
       context: .
       dockerfile: Dockerfile.serving
+    restart: unless-stopped
     ports:
       - "8000:8000"
     environment:
       REDIS_HOST: redis
       REDIS_PORT: 6379
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: 5432
+      POSTGRES_DB: finpulse
+      POSTGRES_USER: finpulse_admin
+      POSTGRES_PASSWORD: finpulse_secret_2026
     depends_on:
-      - redis
+      redis:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/ready"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
 
   streaming-worker:
     build:
       context: .
       dockerfile: Dockerfile.streaming
+    restart: unless-stopped
     environment:
       KAFKA_BOOTSTRAP_SERVERS: kafka:29092
       REDIS_HOST: redis
       REDIS_PORT: 6379
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: 5432
+      POSTGRES_DB: finpulse
+      POSTGRES_USER: finpulse_admin
+      POSTGRES_PASSWORD: finpulse_secret_2026
     depends_on:
-      - kafka
-      - redis
-      - finpulse-api
+      redis:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+      kafka:
+        condition: service_started
+      finpulse-api:
+        condition: service_healthy
 
   dashboard:
     build:
       context: .
       dockerfile: Dockerfile.dashboard
+    restart: unless-stopped
     ports:
       - "8501:8501"
     environment:
       API_URL: http://finpulse-api:8000
       REDIS_HOST: redis
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: 5432
+      POSTGRES_DB: finpulse
+      POSTGRES_USER: finpulse_admin
+      POSTGRES_PASSWORD: finpulse_secret_2026
     depends_on:
-      - finpulse-api
+      postgres:
+        condition: service_healthy
+      finpulse-api:
+        condition: service_healthy
+
+  prometheus:
+    image: prom/prometheus:v2.51.0
+    container_name: finpulse-prometheus
+    restart: unless-stopped
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./configs/prometheus.yml:/etc/prometheus/prometheus.yml
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/usr/share/prometheus/console_libraries'
+      - '--web.console.templates=/usr/share/prometheus/consoles'
+    depends_on:
+      finpulse-api:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:9090/-/ready"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+
+volumes:
+  redis_data:
+  postgres_data:

@@ -1,0 +1,89 @@
+{
+  "suite_name": "R6 Failure Recovery & Resilience",
+  "test_file": "tests/test_resilience_r6.py",
+  "timestamp": "2026-10-01T17:47:24.586527+00:00",
+  "duration_seconds": 8.844,
+  "status": "PASSED",
+  "total_tests": 7,
+  "passed": 7,
+  "failed": 0,
+  "skipped": 0,
+  "stdout_summary": [
+    "    warnings.warn(",
+    "",
+    "tests/test_resilience_r6.py::TestResilienceR6::test_worker_offset_not_committed_on_publisher_failure",
+    "tests/test_resilience_r6.py::TestResilienceR6::test_deterministic_reprocessing_identity",
+    "tests/test_resilience_r6.py::TestResilienceR6::test_deterministic_reprocessing_identity",
+    "  C:\\Users\\User\\AppData\\Roaming\\Python\\Python312\\site-packages\\shap\\explainers\\_tree.py:632: UserWarning: LightGBM binary classifier with TreeExplainer shap values output has changed to a list of ndarray",
+    "    warnings.warn(",
+    "",
+    "-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html",
+    "======================== 7 passed, 9 warnings in 7.06s ========================"
+  ],
+  "scenarios": [
+    {
+      "scenario": "test_kafka_publisher_failure_visibility",
+      "status": "PASSED"
+    },
+    {
+      "scenario": "test_worker_offset_not_committed_on_publisher_failure",
+      "status": "PASSED"
+    },
+    {
+      "scenario": "test_redis_failure_fallback_non_fatal",
+      "status": "PASSED"
+    },
+    {
+      "scenario": "test_missing_model_artifact_fails_safely",
+      "status": "PASSED"
+    },
+    {
+      "scenario": "test_corrupted_model_artifact_fails_safely",
+      "status": "PASSED"
+    },
+    {
+      "scenario": "test_malformed_transaction_routed_to_dlq",
+      "status": "PASSED"
+    },
+    {
+      "scenario": "test_deterministic_reprocessing_identity",
+      "status": "PASSED"
+    },
+    {
+      "scenario": "test_worker_offset_not_committed_on_publisher_failure",
+      "status": "UNKNOWN"
+    },
+    {
+      "scenario": "test_malformed_transaction_routed_to_dlq",
+      "status": "UNKNOWN"
+    },
+    {
+      "scenario": "test_deterministic_reprocessing_identity",
+      "status": "UNKNOWN"
+    },
+    {
+      "scenario": "test_worker_offset_not_committed_on_publisher_failure",
+      "status": "UNKNOWN"
+    },
+    {
+      "scenario": "test_deterministic_reprocessing_identity",
+      "status": "UNKNOWN"
+    },
+    {
+      "scenario": "test_deterministic_reprocessing_identity",
+      "status": "UNKNOWN"
+    },
+    {
+      "scenario": "test_worker_offset_not_committed_on_publisher_failure",
+      "status": "UNKNOWN"
+    },
+    {
+      "scenario": "test_deterministic_reprocessing_identity",
+      "status": "UNKNOWN"
+    },
+    {
+      "scenario": "test_deterministic_reprocessing_identity",
+      "status": "UNKNOWN"
+    }
+  ]
+}

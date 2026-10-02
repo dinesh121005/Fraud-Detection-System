@@ -1,0 +1,93 @@
+{
+  "suite_name": "R6 Security Hardening & Input Defense",
+  "test_file": "tests/test_security_r6.py",
+  "timestamp": "2026-10-01T17:47:34.073586+00:00",
+  "duration_seconds": 9.486,
+  "status": "PASSED",
+  "total_tests": 9,
+  "passed": 9,
+  "failed": 0,
+  "skipped": 0,
+  "stdout_summary": [
+    "tests/test_security_r6.py::TestSecurityR6::test_empty_string_identifiers_rejected",
+    "tests/test_security_r6.py::TestSecurityR6::test_oversized_payload_rejected",
+    "tests/test_security_r6.py::TestSecurityR6::test_security_headers_present",
+    "tests/test_security_r6.py::TestSecurityR6::test_internal_error_does_not_leak_stacktrace",
+    "tests/test_security_r6.py::TestSecurityR6::test_readiness_probe",
+    "  C:\\Users\\User\\AppData\\Roaming\\Python\\Python312\\site-packages\\sklearn\\ensemble\\_iforest.py:344: UserWarning: max_samples (256) is greater than the total number of samples (200). max_samples will be set to n_samples for estimation.",
+    "    warn(",
+    "",
+    "-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html",
+    "======================== 9 passed, 9 warnings in 7.66s ========================"
+  ],
+  "scenarios": [
+    {
+      "scenario": "test_negative_amount_rejected",
+      "status": "PASSED"
+    },
+    {
+      "scenario": "test_extreme_amount_rejected",
+      "status": "PASSED"
+    },
+    {
+      "scenario": "test_nan_and_infinity_rejected",
+      "status": "PASSED"
+    },
+    {
+      "scenario": "test_oversized_string_fields_rejected",
+      "status": "PASSED"
+    },
+    {
+      "scenario": "test_empty_string_identifiers_rejected",
+      "status": "PASSED"
+    },
+    {
+      "scenario": "test_oversized_payload_rejected",
+      "status": "PASSED"
+    },
+    {
+      "scenario": "test_security_headers_present",
+      "status": "PASSED"
+    },
+    {
+      "scenario": "test_internal_error_does_not_leak_stacktrace",
+      "status": "PASSED"
+    },
+    {
+      "scenario": "test_readiness_probe",
+      "status": "PASSED"
+    },
+    {
+      "scenario": "test_negative_amount_rejected",
+      "status": "UNKNOWN"
+    },
+    {
+      "scenario": "test_extreme_amount_rejected",
+      "status": "UNKNOWN"
+    },
+    {
+      "scenario": "test_oversized_string_fields_rejected",
+      "status": "UNKNOWN"
+    },
+    {
+      "scenario": "test_empty_string_identifiers_rejected",
+      "status": "UNKNOWN"
+    },
+    {
+      "scenario": "test_oversized_payload_rejected",
+      "status": "UNKNOWN"
+    },
+    {
+      "scenario": "test_security_headers_present",
+      "status": "UNKNOWN"
+    },
+    {
+      "scenario": "test_internal_error_does_not_leak_stacktrace",
+      "status": "UNKNOWN"
+    },
+    {
+      "scenario": "test_readiness_probe",
+      "status": "UNKNOWN"
+    }
+  ]
+}

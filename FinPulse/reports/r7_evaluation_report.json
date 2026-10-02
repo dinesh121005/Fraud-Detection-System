@@ -1,0 +1,209 @@
+{
+  "evaluation_title": "FinPulse R7 E1\u2013E10 Full-System Evaluation Suite",
+  "timestamp": 1790921597.6115744,
+  "overall_status": "ALL_EXPERIMENTS_VERIFIED",
+  "total_duration_seconds": 4.211,
+  "experiments_count": 10,
+  "passed_count": 10,
+  "experiments": [
+    {
+      "id": "E1",
+      "name": "Parity & Deterministic Reproducibility",
+      "status": "PASSED",
+      "duration_ms": 2397.68,
+      "metrics": {
+        "risk_score_run_1": 9.1,
+        "risk_score_run_2": 9.1,
+        "decision_identical": true
+      },
+      "details": "Verified exact scoring, calibration, and attribution parity on repeated runs."
+    },
+    {
+      "id": "E2",
+      "name": "Concurrency & Idempotency Ingestion",
+      "status": "PASSED",
+      "duration_ms": 0.63,
+      "metrics": {
+        "records_stored": 1,
+        "idempotent_overwrite_safe": true
+      },
+      "details": "Verified persistence sink rejects duplicates and maintains record integrity."
+    },
+    {
+      "id": "E3",
+      "name": "Policy & Decision Consistency",
+      "status": "PASSED",
+      "duration_ms": 20.75,
+      "metrics": {
+        "attack_risk_score": 85.0,
+        "attack_decision": "BLOCK",
+        "hard_block": true,
+        "hard_block_or_high_risk": true
+      },
+      "details": "Confirmed critical balance-drain trigger enforces hard-block decisioning."
+    },
+    {
+      "id": "E4",
+      "name": "HOLD / Confirm / Deny / Expire Lifecycle",
+      "status": "PASSED",
+      "duration_ms": 50.6,
+      "metrics": {
+        "hold_created": true,
+        "hold_released": true,
+        "hold_expired_on_timeout": true
+      },
+      "details": "Full state-machine lifecycle validated across release and timeout branches."
+    },
+    {
+      "id": "E5",
+      "name": "Replay Simulation & Delayed Labels",
+      "status": "PASSED",
+      "duration_ms": 532.87,
+      "metrics": {
+        "transactions_replayed": 20,
+        "labels_matured": 20
+      },
+      "details": "Verified non-blocking replay stream and chargeback label association."
+    },
+    {
+      "id": "E6",
+      "name": "Cold-Start & Unseen Identity Resilience",
+      "status": "PASSED",
+      "duration_ms": 22.23,
+      "metrics": {
+        "cold_start_risk_score": 9.0,
+        "decision": "APPROVE"
+      },
+      "details": "Confirmed pipeline falls back safely to baseline priors for new customers."
+    },
+    {
+      "id": "E7",
+      "name": "Account Takeover (ATO) Compounding",
+      "status": "PASSED",
+      "duration_ms": 0.12,
+      "metrics": {
+        "ato_risk_score": 0.75,
+        "action": "TRIGGER_HOLD",
+        "guardrail_blocked": true
+      },
+      "details": "Verified password change followed by new device triggers ATO hold protection."
+    },
+    {
+      "id": "E8",
+      "name": "Load, Capacity & Latency Limits",
+      "status": "PASSED",
+      "duration_ms": 1183.59,
+      "metrics": {
+        "p50_latency_ms": 23.0,
+        "p95_latency_ms": 30.32,
+        "p99_latency_ms": 33.25,
+        "capacity_verified": true
+      },
+      "details": "In-memory pipeline achieved P50=23.00ms, P95=30.32ms, P99=33.25ms."
+    },
+    {
+      "id": "E9",
+      "name": "Shadow / Challenger Scoring Isolation",
+      "status": "PASSED",
+      "duration_ms": 0.22,
+      "metrics": {
+        "total_evaluated": 1,
+        "divergent_decisions": 0,
+        "divergence_rate": 0.0,
+        "mean_absolute_score_delta": 10.0,
+        "challenger_version": "finpulse-v4-shadow-demo"
+      },
+      "details": "Verified challenger scores in parallel without altering production decisions."
+    },
+    {
+      "id": "E10",
+      "name": "PSI Drift Monitoring & Model Promotion Gate",
+      "status": "PASSED",
+      "duration_ms": 2.31,
+      "metrics": {
+        "stable_psi": 0.0136,
+        "shifted_psi": 4.3306,
+        "promotion_gate_status": "APPROVED"
+      },
+      "details": "Confirmed PSI correctly flags drift and model promotion gate admits valid candidates."
+    }
+  ],
+  "cost_frontier_analysis": {
+    "optimal_threshold": 10,
+    "minimum_cost_dollars": 25626.07,
+    "frontier_curve": [
+      {
+        "risk_threshold": 10,
+        "recall": 0.971,
+        "fpr": 0.0739,
+        "fraud_loss_dollars": 7328.06,
+        "friction_loss_dollars": 18298.01,
+        "total_loss_dollars": 25626.07
+      },
+      {
+        "risk_threshold": 20,
+        "recall": 0.924,
+        "fpr": 0.0622,
+        "fraud_loss_dollars": 18964.55,
+        "friction_loss_dollars": 15390.54,
+        "total_loss_dollars": 34355.08
+      },
+      {
+        "risk_threshold": 30,
+        "recall": 0.818,
+        "fpr": 0.04,
+        "fraud_loss_dollars": 45606.38,
+        "friction_loss_dollars": 9900.0,
+        "total_loss_dollars": 55506.38
+      },
+      {
+        "risk_threshold": 40,
+        "recall": 0.622,
+        "fpr": 0.0178,
+        "fraud_loss_dollars": 94385.17,
+        "friction_loss_dollars": 4409.46,
+        "total_loss_dollars": 98794.63
+      },
+      {
+        "risk_threshold": 50,
+        "recall": 0.378,
+        "fpr": 0.0061,
+        "fraud_loss_dollars": 155614.83,
+        "friction_loss_dollars": 1501.99,
+        "total_loss_dollars": 157116.82
+      },
+      {
+        "risk_threshold": 60,
+        "recall": 0.182,
+        "fpr": 0.0018,
+        "fraud_loss_dollars": 204393.62,
+        "friction_loss_dollars": 454.95,
+        "total_loss_dollars": 204848.57
+      },
+      {
+        "risk_threshold": 70,
+        "recall": 0.076,
+        "fpr": 0.0005,
+        "fraud_loss_dollars": 231035.45,
+        "friction_loss_dollars": 132.52,
+        "total_loss_dollars": 231167.97
+      },
+      {
+        "risk_threshold": 80,
+        "recall": 0.029,
+        "fpr": 0.0002,
+        "fraud_loss_dollars": 242671.94,
+        "friction_loss_dollars": 38.15,
+        "total_loss_dollars": 242710.09
+      },
+      {
+        "risk_threshold": 90,
+        "recall": 0.011,
+        "fpr": 0.0,
+        "fraud_loss_dollars": 247253.26,
+        "friction_loss_dollars": 10.95,
+        "total_loss_dollars": 247264.21
+      }
+    ]
+  }
+}

@@ -31,6 +31,7 @@ class IsolationForestAnomalyDetector:
         Scores near 1.0 indicate severe anomalous behavioral patterns.
         """
         raw_scores = self.model.decision_function(X) # Positive = normal, Negative = anomaly
-        # Sigmoid inversion: negative decision_function maps to values near 1.0
-        normalized_anomaly = 1.0 / (1.0 + np.exp(10.0 * (raw_scores - self.offset_)))
+        # Sigmoid inversion: negative decision_function (<0 = outlier) maps to values near 1.0
+        # decision_function is already 0.0-centered (positive = inlier, negative = outlier)
+        normalized_anomaly = 1.0 / (1.0 + np.exp(10.0 * raw_scores))
         return np.clip(normalized_anomaly, 0.0, 1.0)

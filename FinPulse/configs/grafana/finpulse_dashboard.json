@@ -1,0 +1,135 @@
+{
+  "annotations": {
+    "list": []
+  },
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 1,
+  "id": null,
+  "links": [],
+  "liveNow": false,
+  "panels": [
+    {
+      "title": "FinPulse Transaction Throughput",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 8, "x": 0, "y": 0 },
+      "targets": [
+        {
+          "expr": "sum(rate(finpulse_transactions_total[1m]))",
+          "legendFormat": "Accepted Tx/sec"
+        }
+      ]
+    },
+    {
+      "title": "Decisions Breakdown (APPROVE / REVIEW / BLOCK)",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 8, "x": 8, "y": 0 },
+      "targets": [
+        {
+          "expr": "sum by (decision) (rate(finpulse_decisions_total[1m]))",
+          "legendFormat": "{{decision}}"
+        }
+      ]
+    },
+    {
+      "title": "Fraud Alerts Published",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 8, "x": 16, "y": 0 },
+      "targets": [
+        {
+          "expr": "rate(finpulse_fraud_alerts_total[1m])",
+          "legendFormat": "Alerts/sec"
+        }
+      ]
+    },
+    {
+      "title": "End-to-End Processing Latency (ms)",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 8 },
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.50, sum(rate(finpulse_processing_latency_ms_bucket[1m])) by (le))",
+          "legendFormat": "P50 E2E"
+        },
+        {
+          "expr": "histogram_quantile(0.95, sum(rate(finpulse_processing_latency_ms_bucket[1m])) by (le))",
+          "legendFormat": "P95 E2E"
+        },
+        {
+          "expr": "histogram_quantile(0.99, sum(rate(finpulse_processing_latency_ms_bucket[1m])) by (le))",
+          "legendFormat": "P99 E2E"
+        }
+      ]
+    },
+    {
+      "title": "Subsystem Latencies (P95 ms)",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 8 },
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.95, sum(rate(finpulse_model_latency_ms_bucket[1m])) by (le))",
+          "legendFormat": "Model (CatBoost+Calib+SHAP)"
+        },
+        {
+          "expr": "histogram_quantile(0.95, sum(rate(finpulse_redis_latency_ms_bucket[1m])) by (le))",
+          "legendFormat": "Redis Window"
+        },
+        {
+          "expr": "histogram_quantile(0.95, sum(rate(finpulse_kafka_publish_latency_ms_bucket[1m])) by (le))",
+          "legendFormat": "Kafka Publish"
+        },
+        {
+          "expr": "histogram_quantile(0.95, sum(rate(finpulse_feature_engine_latency_ms_bucket[1m])) by (le))",
+          "legendFormat": "Feature Engine"
+        }
+      ]
+    },
+    {
+      "title": "System Errors by Component",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 8, "x": 0, "y": 16 },
+      "targets": [
+        {
+          "expr": "sum by (component, error_type) (rate(finpulse_errors_total[1m]))",
+          "legendFormat": "{{component}} - {{error_type}}"
+        }
+      ]
+    },
+    {
+      "title": "Replay / Duplicate Detection & DLQ Events",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 8, "x": 8, "y": 16 },
+      "targets": [
+        {
+          "expr": "sum(rate(finpulse_replays_total[1m]))",
+          "legendFormat": "Replays/sec"
+        },
+        {
+          "expr": "sum(rate(finpulse_dlq_total[1m]))",
+          "legendFormat": "DLQ events/sec"
+        }
+      ]
+    },
+    {
+      "title": "Risk Categorical Levels (LOW / MEDIUM / HIGH)",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 8, "x": 16, "y": 16 },
+      "targets": [
+        {
+          "expr": "sum by (risk_level) (rate(finpulse_risk_levels_total[1m]))",
+          "legendFormat": "{{risk_level}}"
+        }
+      ]
+    }
+  ],
+  "refresh": "5s",
+  "schemaVersion": 38,
+  "style": "dark",
+  "tags": ["finpulse", "fraud-detection", "observability"],
+  "time": { "from": "now-15m", "to": "now" },
+  "timepicker": { "refresh_intervals": ["5s", "10s", "30s", "1m"] },
+  "timezone": "utc",
+  "title": "FinPulse AI — Production Observability Dashboard",
+  "uid": "finpulse-ops-r6-1",
+  "version": 1
+}

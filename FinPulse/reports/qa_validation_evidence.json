@@ -1,0 +1,224 @@
+{
+  "Scenario_A": {
+    "input": {
+      "transaction_id": "tx_gold_a_001",
+      "customer_id": "CUST_001",
+      "merchant_id": "CUST_002",
+      "amount": 2000.0,
+      "timestamp": 1790922234.3167005,
+      "origin_balance": 15000.0,
+      "dest_balance": 5000.0,
+      "auth_verified": true,
+      "device_id": "known_device_001",
+      "location": {
+        "latitude": 12.9716,
+        "longitude": 77.5946
+      },
+      "home_location": {
+        "latitude": 12.9716,
+        "longitude": 77.5946
+      },
+      "payment_type": "TRANSFER",
+      "category": "transfer"
+    },
+    "decision": "APPROVE",
+    "risk_score": 9.0,
+    "risk_level": "LOW",
+    "calibrated_probability": 0.002,
+    "payout_received_by_receiver": true,
+    "passed": true
+  },
+  "Scenario_B": {
+    "input": {
+      "transaction_id": "tx_gold_b_001",
+      "customer_id": "CUST_001",
+      "merchant_id": "CUST_892",
+      "amount": 50000.0,
+      "timestamp": 1790922236.1586199,
+      "origin_balance": 55000.0,
+      "dest_balance": 1000.0,
+      "auth_verified": true,
+      "device_id": "new_unrecognized_device_999",
+      "location": {
+        "latitude": 28.6139,
+        "longitude": 77.209
+      },
+      "home_location": {
+        "latitude": 12.9716,
+        "longitude": 77.5946
+      },
+      "payment_type": "TRANSFER",
+      "category": "transfer"
+    },
+    "initial_decision": "REVIEW",
+    "risk_score": 31.1,
+    "risk_level": "MEDIUM",
+    "hold_created": true,
+    "notification_delivered": true,
+    "customer_action": "Yes, It's Me",
+    "final_status": "RELEASED",
+    "payout_released": true,
+    "passed": true
+  },
+  "Analyst_Forensics": {
+    "risk_score": 31.1,
+    "calibrated_probability": 0.0099,
+    "signals": {
+      "calibrated_probability": 0.0099,
+      "ml_probability": 0.0099,
+      "velocity_signal": 0.1467,
+      "velocity_risk": 0.1467,
+      "behavioral_signal": 1.0,
+      "behavioral_risk": 1.0,
+      "rules_signal": 0.3,
+      "rule_risk": 0.3,
+      "anomaly_signal": 0.8938,
+      "anomaly_score": 0.8938
+    },
+    "reasons": [
+      "Transaction amount exceeds 4 standard deviations from user baseline",
+      "Cumulative 1-hour spending exceeds safe threshold"
+    ],
+    "matched_rules": [
+      {
+        "rule_id": "AMT_EXTREME_ZSCORE",
+        "category": "amount",
+        "severity": "HIGH",
+        "hard_block": false,
+        "reason": "Transaction amount exceeds 4 standard deviations from user baseline",
+        "risk_contribution": 0.3
+      }
+    ],
+    "passed": true
+  },
+  "Scenario_C": {
+    "input": {
+      "transaction_id": "tx_gold_c_001",
+      "customer_id": "CUST_999",
+      "merchant_id": "CUST_892",
+      "amount": 90000.0,
+      "timestamp": 1790922236.1867733,
+      "origin_balance": 0.0,
+      "dest_balance": 100.0,
+      "auth_verified": false,
+      "device_id": "unverified_bot_device",
+      "payment_type": "TRANSFER",
+      "category": "transfer"
+    },
+    "decision": "BLOCK",
+    "risk_score": 85.0,
+    "risk_level": "HIGH",
+    "hard_block": true,
+    "matched_rules": [
+      "AMT_ZERO_BALANCE_HIGH_VALUE",
+      "AUTH_MISSING_STEP_UP",
+      "AUTH_HIGH_VALUE_UNVERIFIED",
+      "BLOCK_ZERO_BALANCE_HIGH_DRAIN_NO_AUTH"
+    ],
+    "fraud_alert_generated": true,
+    "receiver_received_payment": false,
+    "passed": true
+  },
+  "QA_Matrix": {
+    "QA-01": {
+      "name": "Application startup",
+      "status": "PASS",
+      "details": "FastAPI, Predictor, SlidingWindowEngine, and Streamlit initialized with healthy components."
+    },
+    "QA-02": {
+      "name": "Complete regression",
+      "status": "PASS",
+      "details": "Pytest executed 301 tests: 301 passed, 0 failed, 0 skipped."
+    },
+    "QA-03": {
+      "name": "Normal transaction",
+      "status": "PASS",
+      "details": "Normal context produced decision=APPROVE (RiskScore=9.00)."
+    },
+    "QA-04": {
+      "name": "Suspicious transaction",
+      "status": "PASS",
+      "details": "Decision=REVIEW, Hold notification delivered=True."
+    },
+    "QA-05": {
+      "name": "HOLD confirmation",
+      "status": "PASS",
+      "details": "State transition HOLD -> RELEASED confirmed via verification token."
+    },
+    "QA-06": {
+      "name": "HOLD expiry",
+      "status": "PASS",
+      "details": "Expired count=1, post-expiry confirmation rejected=True."
+    },
+    "QA-07": {
+      "name": "Hard block",
+      "status": "PASS",
+      "details": "Critical balance-drain triggered BLOCK with hard_block=True."
+    },
+    "QA-08": {
+      "name": "Duplicate transaction",
+      "status": "PASS",
+      "details": "First persist=True, second persist=True, table record count=1 (idempotent duplicate safely handled)."
+    },
+    "QA-09": {
+      "name": "Replay consistency",
+      "status": "PASS",
+      "details": "Calibrated probability and risk score bitwise identical across repeat evaluations: True."
+    },
+    "QA-10": {
+      "name": "Cold-start customer",
+      "status": "PASS",
+      "details": "Unseen customer scored successfully without crash: Decision=APPROVE, Risk=8.8."
+    },
+    "QA-11": {
+      "name": "Malformed transaction",
+      "status": "PASS",
+      "details": "Malformed payload rejected cleanly by API validator with HTTP 422."
+    },
+    "QA-12": {
+      "name": "Invalid amount",
+      "status": "PASS",
+      "details": "Amounts 0, -1, NaN, Inf rejected prior to model inference (HTTP 422 / ValidationError)."
+    },
+    "QA-13": {
+      "name": "Oversized input",
+      "status": "PASS",
+      "details": "Oversized input intercepted by R6 boundary middleware (HTTP 413)."
+    },
+    "QA-14": {
+      "name": "Model failure",
+      "status": "PASS",
+      "details": "Missing model directory throws safe exception without fabricating predictions: True."
+    },
+    "QA-15": {
+      "name": "Redis failure",
+      "status": "PASS",
+      "details": "Redis connection outage caught gracefully, returning empty window history without crash."
+    },
+    "QA-16": {
+      "name": "Kafka failure",
+      "status": "PASS",
+      "details": "Broker publishing failure correctly surfaces exception and increments failed_count."
+    },
+    "QA-17": {
+      "name": "Feature integrity",
+      "status": "PASS",
+      "details": "Exactly 32 frozen features in canonical order across Groups A-E."
+    },
+    "QA-18": {
+      "name": "Decision consistency",
+      "status": "PASS",
+      "details": "Decision identical across 5 repeat evaluations: ['APPROVE', 'APPROVE', 'APPROVE', 'APPROVE', 'APPROVE']."
+    },
+    "QA-19": {
+      "name": "Dashboard consistency",
+      "status": "PASS",
+      "details": "Dashboard view state perfectly syncs with backend state machine transitions."
+    },
+    "QA-20": {
+      "name": "End-to-end accounting",
+      "status": "PASS",
+      "details": "Transaction tx_gold_a_001 cleanly mapped from ingestion to DecisionEvent e3d9420e-3240-5d27-8d7c-dfde89418e7f."
+    }
+  }
+}

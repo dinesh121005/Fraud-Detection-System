@@ -7,13 +7,14 @@ Maintains low-latency historical context per customer and device:
 - Bidirectional Customer <-> Device Graph
 - Strict Read -> Process -> Write Order Invariant Enforcement
 """
+from __future__ import annotations
 import os
 import sys
 import json
 import math
 import logging
 from dataclasses import dataclass, field, asdict
-from typing import Dict, Any, List, Optional, Set, Tuple
+from typing import TYPE_CHECKING, Dict, Any, List, Optional, Set, Tuple
 
 # Ensure FinPulse root in sys.path
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -22,7 +23,9 @@ if FINPULSE_DIR not in sys.path:
     sys.path.insert(0, FINPULSE_DIR)
 
 from src.state.redis_client import get_redis_client, InMemoryRedisMock
-from src.streaming.schema import TransactionEvent
+
+if TYPE_CHECKING:
+    from src.streaming.schema import TransactionEvent
 
 logger = logging.getLogger("FinPulse.RedisStateManager")
 
