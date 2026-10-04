@@ -188,6 +188,7 @@ def compute_spatial_and_device_metrics(
     speed = 0.0
     prior_locations = []
     prior_devices = set()
+    cur_dev = str(current_device_id).strip()
 
     # Filter and sort strictly prior events chronologically
     valid_prior = [ev for ev in prior_events if float(ev.get("timestamp", 0.0)) < current_timestamp]
@@ -203,7 +204,11 @@ def compute_spatial_and_device_metrics(
             prior_devices.add(dev)
 
     if valid_prior and (current_lat != 0.0 or current_lon != 0.0):
-        last_event = valid_prior[-1]
+        # Prefer the last event from the SAME device or customer's known device for travel speed calculation,
+        # so an intercepted attacker device attempt does not corrupt the legitimate user's physical travel baseline
+        same_device_events = [ev for ev in valid_prior if str(ev.get("device_id", "")).strip() == cur_dev] if cur_dev and cur_dev != "unknown_device" else []
+        last_event = same_device_events[-1] if same_device_events else valid_prior[-1]
+
         prev_lat = float(last_event.get("latitude", 0.0))
         prev_lon = float(last_event.get("longitude", 0.0))
         if prev_lat != 0.0 or prev_lon != 0.0:
@@ -212,7 +217,6 @@ def compute_spatial_and_device_metrics(
             speed = compute_velocity_speed_kmh(dist_prev, time_diff)
 
     # 3. New device detection
-    cur_dev = str(current_device_id).strip()
     if not cur_dev or cur_dev == "unknown_device" or len(prior_devices) == 0:
         is_new_device = 0
     else:

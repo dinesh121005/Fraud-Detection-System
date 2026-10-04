@@ -1,9 +1,15 @@
-"""Sub-10ms In-Memory Model Scoring and Risk Engine Pipeline with R6.1 Telemetry."""
+"""In-Memory Low-Latency Model Scoring and Risk Engine Pipeline with R6.1 Telemetry."""
 import os
 import time
+import warnings
 import joblib
 import numpy as np
+import pandas as pd
 from typing import Dict, Any
+
+warnings.filterwarnings("ignore", category=UserWarning, module="sklearn.ensemble._iforest")
+warnings.filterwarnings("ignore", category=UserWarning, module="shap.explainers._tree")
+warnings.filterwarnings("ignore", category=UserWarning, module="sklearn.utils.validation")
 
 from src.features.pipeline import FinPulseFeaturePipeline
 from src.state.sliding_window import RedisSlidingWindowEngine
@@ -41,12 +47,27 @@ class ProductionPredictor:
         # 2. Initialize ancillary components
         self.redis_window = RedisSlidingWindowEngine()
         self.anomaly_detector = IsolationForestAnomalyDetector()
-        
-        # Fit anomaly detector on dummy legitimate sample if needed
-        dummy_legit = np.random.normal(loc=100.0, scale=30.0, size=(200, 32))
-        self.anomaly_detector.fit(dummy_legit)
 
-        self.explainer = ShapExplainerWrapper(self.model, dummy_legit[:50])
+        # Load authentic legitimate feature vectors from processed dataset for reference background
+        finpulse_root = os.path.abspath(os.path.join(artifacts_dir, "..", ".."))
+        bg_data_path = os.path.join(finpulse_root, "data", "processed", "sparkov_features.npz")
+        legit_background = None
+        if os.path.exists(bg_data_path):
+            try:
+                npz = np.load(bg_data_path)
+                X_tr = npz["X_train"]
+                y_tr = npz["y_train"]
+                legit_idx = np.where(y_tr == 0)[0]
+                if len(legit_idx) >= 200:
+                    legit_background = X_tr[legit_idx[:200]].astype(np.float32)
+            except Exception as ex:
+                logger.warning(f"Could not load background data from {bg_data_path}: {ex}")
+
+        if legit_background is None or len(legit_background) < 50:
+            legit_background = np.zeros((200, 32), dtype=np.float32)
+
+        self.anomaly_detector.fit(legit_background)
+        self.explainer = ShapExplainerWrapper(self.model, legit_background[:50])
         self.risk_engine = FinPulseRiskEngine()
 
     def predict(self, tx: Dict[str, Any]) -> Dict[str, Any]:
@@ -57,6 +78,17 @@ class ProductionPredictor:
         tx_id = tx.get("transaction_id", "tx_0")
         ts = float(tx.get("timestamp", time.time()))
         amount = float(tx.get("amount", 0.0))
+
+        # Contextual location, device, and temporal extraction
+        loc = tx.get("location")
+        lat = float(tx.get("latitude", loc.get("latitude", 0.0) if isinstance(loc, dict) else 0.0))
+        lon = float(tx.get("longitude", loc.get("longitude", 0.0) if isinstance(loc, dict) else 0.0))
+        hloc = tx.get("home_location")
+        hlat = float(tx.get("home_latitude", hloc.get("latitude", 0.0) if isinstance(hloc, dict) else 0.0))
+        hlon = float(tx.get("home_longitude", hloc.get("longitude", 0.0) if isinstance(hloc, dict) else 0.0))
+        cat = str(tx.get("category", "general"))
+        hour = int(tx.get("hour_of_day", int((ts % 86400) // 3600)))
+        dev_id = str(tx.get("device_id", "unknown_device"))
 
         # Establish execution correlation context
         set_correlation_context(
@@ -74,7 +106,14 @@ class ProductionPredictor:
                 customer_id=cust_id,
                 tx_id=tx_id,
                 timestamp=ts,
-                amount=amount
+                amount=amount,
+                category=cat,
+                hour=hour,
+                lat=lat,
+                lon=lon,
+                device_id=dev_id,
+                home_lat=hlat,
+                home_lon=hlon
             )
         except Exception as e:
             record_error("redis", "runtime_error")
@@ -98,10 +137,16 @@ class ProductionPredictor:
         # 3. Supervised Prediction, Calibration, Anomaly, and SHAP
         t_model = time.perf_counter()
         try:
-            raw_prob = float(self.model.predict_proba(ordered_vec)[0])
+            feature_cols = getattr(getattr(self.model, "model", None), "feature_name_", None)
+            if feature_cols:
+                feat_input = pd.DataFrame(ordered_vec, columns=feature_cols)
+                raw_prob = float(self.model.predict_proba(feat_input)[0])
+            else:
+                raw_prob = float(self.model.predict_proba(ordered_vec)[0])
+
             calibrated_prob = float(self.calibrator.predict(np.array([raw_prob]))[0])
             anomaly_score = float(self.anomaly_detector.score_anomaly(ordered_vec)[0])
-            attributions = self.explainer.explain_transaction(ordered_vec[0], top_k=3)
+            attributions = self.explainer.explain_transaction(ordered_vec[0], top_k=8)
             reasons = map_attributions_to_reasons(attributions)
         except Exception as e:
             record_error("model", "runtime_error")
@@ -121,6 +166,10 @@ class ProductionPredictor:
                 anomaly_score=anomaly_score,
                 reasons=reasons
             )
+            result["attributions"] = attributions
+            result["features_dict"] = feat_dict
+            if "diagnostics" in result and isinstance(result["diagnostics"], dict):
+                result["diagnostics"]["attributions"] = attributions
         except Exception as e:
             record_error("risk_engine", "runtime_error")
             logger.error("Risk evaluation failed", error=str(e), stage="risk_engine")

@@ -59,6 +59,10 @@ class HoldCase:
     metadata: Dict[str, Any] = field(default_factory=dict)
 
     @property
+    def case_id(self) -> str:
+        return self.hold_id
+
+    @property
     def expires_at(self) -> float:
         return self.created_at + self.timeout_seconds
 
@@ -125,6 +129,12 @@ class HoldWorkflowEngine:
         self._tx_to_hold[transaction_id] = hold_id
         logger.info("Transaction placed on HOLD", hold_id=hold_id, transaction_id=transaction_id, customer_id=customer_id)
         return case, token
+
+    def register_case(self, case: HoldCase) -> str:
+        """Register an existing HoldCase (e.g. loaded from PostgreSQL) and return its valid token."""
+        self._cases[case.hold_id] = case
+        self._tx_to_hold[case.transaction_id] = case.hold_id
+        return self._generate_token(case.hold_id, case.transaction_id)
 
     def confirm_hold(
         self,
@@ -250,3 +260,19 @@ class HoldWorkflowEngine:
         if case is None:
             raise HoldTransitionError(f"Hold case '{hold_id}' not found.")
         return case
+
+    def reset(self, customer_id: Optional[str] = None) -> None:
+        """Purge hold cases for clean demo reset."""
+        if customer_id:
+            to_remove = [hid for hid, c in self._cases.items() if c.customer_id == customer_id]
+            for hid in to_remove:
+                case = self._cases.pop(hid, None)
+                if case:
+                    self._tx_to_hold.pop(case.transaction_id, None)
+            logger.info("Reset hold cases for customer", customer_id=customer_id)
+        else:
+            self._cases.clear()
+            self._tx_to_hold.clear()
+            logger.info("Reset all hold cases")
+
+

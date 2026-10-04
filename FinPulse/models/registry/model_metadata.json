@@ -1,34 +1,70 @@
 {
-  "model_name": "finpulse-random-forest-prod",
-  "model_version": "2.0.0",
-  "git_commit": "83f39f5",
-  "registration_timestamp": "2026-09-30T17:17:24Z",
-  "status": "PRODUCTION",
-  "datasets": [
-    "PaySim",
-    "Sparkov",
-    "IEEE-CIS"
-  ],
-  "feature_schema_version": "v2.0",
+  "model_version": "finpulse-v3",
+  "model_type": "CatBoost",
+  "feature_schema_version": "2.0",
   "feature_count": 32,
-  "metrics": {
-    "pr_auc": 0.5902,
-    "roc_auc": 0.9928,
-    "recall_at_fpr_1pct": 0.7647,
-    "precision": 0.3125,
-    "recall": 0.7843,
-    "f1": 0.4469,
-    "brier_score": 0.0111
+  "calibration": "platt",
+  "threshold_policy": "v3",
+  "decision_thresholds": {
+    "tau_review": 0.158,
+    "tau_block": 0.5516
   },
-  "calibration": {
-    "method": "isotonic",
-    "raw_brier": 0.01112,
-    "calibrated_brier": 0.00392,
-    "improvement": 0.00719
+  "training_datasets": [
+    "sparkov"
+  ],
+  "training_samples": 21000,
+  "hyperparameter_source": "Optuna",
+  "hyperparameters": {
+    "learning_rate": 0.07636977914554913,
+    "depth": 6,
+    "l2_leaf_reg": 7.816425135445502
   },
-  "thresholds": {
-    "tau_review": 0.05,
-    "tau_block": 0.9
-  },
-  "latency_ms": 0.005
+  "random_seed": 42,
+  "git_commit": "83f39f5",
+  "registration_timestamp": "2026-10-01T04:05:32Z",
+  "status": "FROZEN_PRODUCTION",
+  "untouched_test_evaluation": [
+    {
+      "dataset": "Sparkov",
+      "test_size": 4500,
+      "pr_auc": 0.801,
+      "roc_auc": 0.9715,
+      "recall_1pct_fpr": 0.7742,
+      "precision": 0.4857,
+      "recall": 0.8226,
+      "f1": 0.6108,
+      "brier_score": 0.0058,
+      "ece": 0.00593,
+      "detection_rate": "82.26%",
+      "latency_ms": 0.0015
+    },
+    {
+      "dataset": "PaySim",
+      "test_size": 4500,
+      "pr_auc": 0.0002,
+      "roc_auc": 0.5218,
+      "recall_1pct_fpr": 0.0,
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "brier_score": 0.0171,
+      "ece": 0.11954,
+      "detection_rate": "0.0%",
+      "latency_ms": 0.0009
+    },
+    {
+      "dataset": "IEEE-CIS",
+      "test_size": 4500,
+      "pr_auc": 0.027,
+      "roc_auc": 0.4535,
+      "recall_1pct_fpr": 0.0,
+      "precision": 0.0201,
+      "recall": 0.0552,
+      "f1": 0.0295,
+      "brier_score": 0.0534,
+      "ece": 0.06047,
+      "detection_rate": "5.52%",
+      "latency_ms": 0.0009
+    }
+  ]
 }

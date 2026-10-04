@@ -1,6 +1,6 @@
 # FinPulse AI — Complete Fraud Intelligence & Risk Decisioning Platform
 
-**FinPulse** is an institutional-grade, real-time streaming fraud detection platform engineering sub-10ms risk classification, hybrid machine learning fusion, customer protection workflows, and complete model lifecycle management.
+**FinPulse** is an institutional-grade, real-time streaming fraud detection platform engineering low-latency hybrid risk classification, explainable machine learning fusion, customer protection workflows, and robust PostgreSQL persistence.
 
 ---
 
@@ -95,7 +95,7 @@ Incoming Transaction / Event
 
 ### R6: Observability, Capacity & Hardening
 - **Prometheus Telemetry:** Bounded label cardinality, real-time stage latencies (`redis`, `feature_engine`, `model`, `risk_engine`, `e2e`).
-- **Capacity:** Benchmarked at 5,120 msg/sec with sub-10ms P99 scoring latency.
+- **Capacity & Latency:** Benchmarked at 5,120 msg/sec with sub-10ms pure ML inference, and ~25–35ms end-to-end warm scoring latency (P50: 23.00ms, P95: 30.32ms, P99: 33.25ms; initial cold-start: ~1.5–2.5s for JIT model compilation and TreeExplainer initialization).
 - **Resilience:** Offset commits strictly guarded by publication ACK; automated Dead-Letter Queue (DLQ) isolation; safe artifact corruption failure.
 
 ### R7: Product Workflows & Lifecycle

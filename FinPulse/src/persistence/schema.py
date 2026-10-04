@@ -139,6 +139,25 @@ CREATE TABLE IF NOT EXISTS replay_evaluation_records (
     metrics_json JSONB DEFAULT '{}'::jsonb,
     created_at DOUBLE PRECISION NOT NULL
 );
+
+-- 8. Gateway Security Cases & Feedback Loop (D4, D5)
+CREATE TABLE IF NOT EXISTS security_cases (
+    case_id VARCHAR(64) PRIMARY KEY,
+    transaction_id VARCHAR(64) NOT NULL,
+    customer_id VARCHAR(64) NOT NULL,
+    gateway_decision VARCHAR(16) NOT NULL,
+    customer_report VARCHAR(32) NOT NULL,
+    confirmed_label VARCHAR(16) NOT NULL,
+    attack_type VARCHAR(64) NOT NULL,
+    status VARCHAR(32) DEFAULT 'CONFIRMED_FRAUD',
+    metadata_json JSONB DEFAULT '{}'::jsonb,
+    created_at DOUBLE PRECISION NOT NULL,
+    updated_at DOUBLE PRECISION NOT NULL
+);
+
+CREATE INDEX IF NOT EXISTS idx_cases_cust ON security_cases(customer_id);
+CREATE INDEX IF NOT EXISTS idx_cases_tx ON security_cases(transaction_id);
+CREATE INDEX IF NOT EXISTS idx_cases_type ON security_cases(attack_type);
 """
 
 # =============================================================================
@@ -259,4 +278,22 @@ CREATE TABLE IF NOT EXISTS replay_evaluation_records (
     metrics_json TEXT DEFAULT '{}',
     created_at REAL NOT NULL
 );
+
+CREATE TABLE IF NOT EXISTS security_cases (
+    case_id VARCHAR(64) PRIMARY KEY,
+    transaction_id VARCHAR(64) NOT NULL,
+    customer_id VARCHAR(64) NOT NULL,
+    gateway_decision VARCHAR(16) NOT NULL,
+    customer_report VARCHAR(32) NOT NULL,
+    confirmed_label VARCHAR(16) NOT NULL,
+    attack_type VARCHAR(64) NOT NULL,
+    status VARCHAR(32) DEFAULT 'CONFIRMED_FRAUD',
+    metadata_json TEXT DEFAULT '{}',
+    created_at REAL NOT NULL,
+    updated_at REAL NOT NULL
+);
+
+CREATE INDEX IF NOT EXISTS idx_cases_cust ON security_cases(customer_id);
+CREATE INDEX IF NOT EXISTS idx_cases_tx ON security_cases(transaction_id);
+CREATE INDEX IF NOT EXISTS idx_cases_type ON security_cases(attack_type);
 """

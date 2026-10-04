@@ -307,6 +307,20 @@ class IdempotentEventSink:
                 return None
             return dict(row)
 
+    def get_pending_holds(self, limit: int = 10, customer_id: Optional[str] = None) -> List[Dict[str, Any]]:
+        """Fetch pending HOLD cases (status = 'HOLD') ordered by created_at DESC."""
+        p = "%s" if self.backend == "postgres" else "?"
+        if customer_id:
+            sql = f"SELECT * FROM hold_cases WHERE status = 'HOLD' AND customer_id = {p} ORDER BY created_at DESC LIMIT {p};"
+            params = (customer_id, limit)
+        else:
+            sql = f"SELECT * FROM hold_cases WHERE status = 'HOLD' ORDER BY created_at DESC LIMIT {p};"
+            params = (limit,)
+        with self._get_cursor() as (cur, _, _):
+            cur.execute(sql, params)
+            return [dict(r) for r in cur.fetchall()]
+
+
     # =========================================================================
     # 4. Fraud Alerts Persistence
     # =========================================================================
@@ -467,8 +481,91 @@ class IdempotentEventSink:
         return True
 
     # =========================================================================
-    # 8. Delayed Ground-Truth Labels & Query Methods
+    # 8. Gateway Security Cases & Feedback Loop (D4, D5)
     # =========================================================================
+    def persist_security_case(self, case: Dict[str, Any]) -> bool:
+        """Persist a Gateway Security Case (D4, D5)."""
+        now = time.time()
+        p = "%s" if self.backend == "postgres" else "?"
+
+        sql = f"""
+        INSERT INTO security_cases (
+            case_id, transaction_id, customer_id, gateway_decision,
+            customer_report, confirmed_label, attack_type, status,
+            metadata_json, created_at, updated_at
+        ) VALUES (
+            {p}, {p}, {p}, {p}, {p}, {p}, {p}, {p}, {p}, {p}, {p}
+        )
+        ON CONFLICT(case_id) DO UPDATE SET
+            status = EXCLUDED.status,
+            customer_report = EXCLUDED.customer_report,
+            confirmed_label = EXCLUDED.confirmed_label,
+            attack_type = EXCLUDED.attack_type,
+            metadata_json = EXCLUDED.metadata_json,
+            updated_at = EXCLUDED.updated_at;
+        """
+
+        meta = case.get("metadata", case.get("metadata_json", {}))
+        if not isinstance(meta, str):
+            meta = json.dumps(meta)
+
+        params = (
+            str(case["case_id"]),
+            str(case["transaction_id"]),
+            str(case["customer_id"]),
+            str(case.get("gateway_decision", "APPROVE")),
+            str(case.get("customer_report", "UNAUTHORIZED")),
+            str(case.get("confirmed_label", "FRAUD")),
+            str(case.get("attack_type", "UNKNOWN")),
+            str(case.get("status", "CONFIRMED_FRAUD")),
+            meta,
+            float(case.get("created_at", now)),
+            float(case.get("updated_at", now))
+        )
+
+        with self._get_cursor() as (cur, _, _):
+            cur.execute(sql, params)
+        logger.info("Security case persisted", case_id=case["case_id"], tx_id=case["transaction_id"], label=case.get("confirmed_label"))
+        return True
+
+    def get_security_case(self, case_id: str) -> Optional[Dict[str, Any]]:
+        """Fetch security case by case_id."""
+        p = "%s" if self.backend == "postgres" else "?"
+        sql = f"SELECT * FROM security_cases WHERE case_id = {p};"
+        with self._get_cursor() as (cur, _, _):
+            cur.execute(sql, (case_id,))
+            row = cur.fetchone()
+            if not row:
+                return None
+            return dict(row)
+
+    def get_security_cases(self, customer_id: Optional[str] = None, limit: int = 50) -> List[Dict[str, Any]]:
+        """Fetch security cases for gateway operations and ML feedback loop."""
+        p = "%s" if self.backend == "postgres" else "?"
+        if customer_id:
+            sql = f"SELECT * FROM security_cases WHERE customer_id = {p} ORDER BY created_at DESC LIMIT {p};"
+            params = (customer_id, limit)
+        else:
+            sql = f"SELECT * FROM security_cases ORDER BY created_at DESC LIMIT {p};"
+            params = (limit,)
+        with self._get_cursor() as (cur, _, _):
+            cur.execute(sql, params)
+            return [dict(r) for r in cur.fetchall()]
+
+    # =========================================================================
+    # 9. Delayed Ground-Truth Labels & Query Methods
+    # =========================================================================
+    def get_transaction(self, transaction_id: str) -> Optional[Dict[str, Any]]:
+        """Fetch raw transaction record by transaction_id."""
+        p = "%s" if self.backend == "postgres" else "?"
+        sql = f"SELECT * FROM transactions WHERE transaction_id = {p};"
+        with self._get_cursor() as (cur, _, _):
+            cur.execute(sql, (transaction_id,))
+            row = cur.fetchone()
+            if row is None:
+                return None
+            return dict(row)
+
     def attach_delayed_label(
         self,
         transaction_id: str,
@@ -477,6 +574,7 @@ class IdempotentEventSink:
     ) -> bool:
         """
         Attach a delayed ground-truth fraud label (1=Fraud, 0=Legitimate) to an existing decision.
+        Guarantees record existence via upsert fallback if the decision row was not previously populated.
         """
         now = label_timestamp or time.time()
         p = "%s" if self.backend == "postgres" else "?"
@@ -490,6 +588,66 @@ class IdempotentEventSink:
         with self._get_cursor() as (cur, _, _):
             cur.execute(sql, (int(fraud_label), now, time.time(), transaction_id))
             updated = cur.rowcount > 0
+
+        if not updated:
+            # Fallback: check if we can insert a decision record directly
+            # Fetch transaction details if available
+            tx_row = None
+            try:
+                with self._get_cursor() as (cur, _, _):
+                    cur.execute(f"SELECT * FROM transactions WHERE transaction_id = {p};", (transaction_id,))
+                    row = cur.fetchone()
+                    if row:
+                        tx_row = dict(row)
+            except Exception:
+                tx_row = None
+
+            cust_id = tx_row.get("customer_id", "CUST_DEMO_001") if tx_row else "CUST_DEMO_001"
+            created_ts = tx_row.get("timestamp", now) if tx_row else now
+
+            insert_sql = f"""
+            INSERT INTO fraud_decisions (
+                event_id, transaction_id, customer_id, decision, risk_score,
+                risk_level, ml_decision, calibrated_probability, model_version,
+                schema_version, signals_json, diagnostics_json, reasons_json,
+                matched_rules_json, hard_block, latency_ms, workflow_status,
+                fraud_label, label_timestamp, created_at, updated_at
+            ) VALUES (
+                {p}, {p}, {p}, {p}, {p}, {p}, {p}, {p}, {p}, {p},
+                {p}, {p}, {p}, {p}, {p}, {p}, {p}, {p}, {p}, {p}, {p}
+            )
+            ON CONFLICT(transaction_id) DO UPDATE SET
+                fraud_label = EXCLUDED.fraud_label,
+                label_timestamp = EXCLUDED.label_timestamp,
+                updated_at = EXCLUDED.updated_at;
+            """
+            hard_block_val = 0 if self.backend == "sqlite" else False
+            params = (
+                f"evt_{transaction_id}",
+                str(transaction_id),
+                str(cust_id),
+                "APPROVE",
+                15.0,
+                "LOW",
+                "APPROVE",
+                0.05,
+                "finpulse-v3",
+                "1.0.0",
+                "{}",
+                "{}",
+                '["Reported as unauthorized by customer"]',
+                "[]",
+                hard_block_val,
+                1.0,
+                "CONFIRMED_FRAUD",
+                int(fraud_label),
+                now,
+                float(created_ts),
+                now
+            )
+            with self._get_cursor() as (cur, _, _):
+                cur.execute(insert_sql, params)
+                updated = True
 
         if updated:
             logger.info("Delayed fraud label attached", tx_id=transaction_id, label=fraud_label)
@@ -508,21 +666,90 @@ class IdempotentEventSink:
                 return None
             return dict(row)
 
-    def get_recent_decisions(self, limit: int = 50) -> List[Dict[str, Any]]:
+    def get_recent_decisions(self, customer_id: Optional[str] = None, limit: int = 50) -> List[Dict[str, Any]]:
         """Fetch recent fraud decisions for analyst and live dashboards."""
         p = "%s" if self.backend == "postgres" else "?"
-        sql = f"SELECT * FROM fraud_decisions ORDER BY created_at DESC LIMIT {p};"
+        if customer_id:
+            sql = f"SELECT * FROM fraud_decisions WHERE customer_id = {p} ORDER BY created_at DESC LIMIT {p};"
+            params = (customer_id, limit)
+        else:
+            sql = f"SELECT * FROM fraud_decisions ORDER BY created_at DESC LIMIT {p};"
+            params = (limit,)
         with self._get_cursor() as (cur, _, _):
-            cur.execute(sql, (limit,))
+            cur.execute(sql, params)
             return [dict(r) for r in cur.fetchall()]
 
+    def get_recent_account_events(self, customer_id: Optional[str] = None, limit: int = 50) -> List[Dict[str, Any]]:
+        """Fetch recent account security events (optionally filtered by customer_id)."""
+        p = "%s" if self.backend == "postgres" else "?"
+        if customer_id:
+            sql = f"SELECT * FROM account_security_events WHERE customer_id = {p} ORDER BY timestamp DESC LIMIT {p};"
+            params = (customer_id, limit)
+        else:
+            sql = f"SELECT * FROM account_security_events ORDER BY timestamp DESC LIMIT {p};"
+            params = (limit,)
+        with self._get_cursor() as (cur, _, _):
+            cur.execute(sql, params)
+            return [dict(r) for r in cur.fetchall()]
+
+    def get_recent_fraud_alerts(self, customer_id: Optional[str] = None, limit: int = 50) -> List[Dict[str, Any]]:
+        """Fetch recent fraud alerts (optionally filtered by customer_id)."""
+        p = "%s" if self.backend == "postgres" else "?"
+        if customer_id:
+            sql = f"SELECT * FROM fraud_alerts WHERE customer_id = {p} ORDER BY created_at DESC LIMIT {p};"
+            params = (customer_id, limit)
+        else:
+            sql = f"SELECT * FROM fraud_alerts ORDER BY created_at DESC LIMIT {p};"
+            params = (limit,)
+        with self._get_cursor() as (cur, _, _):
+            cur.execute(sql, params)
+            return [dict(r) for r in cur.fetchall()]
+
+    def get_recent_transactions(self, customer_id: Optional[str] = None, limit: int = 50) -> List[Dict[str, Any]]:
+        """Fetch recent raw transactions (optionally filtered by customer_id)."""
+        p = "%s" if self.backend == "postgres" else "?"
+        if customer_id:
+            sql = f"SELECT * FROM transactions WHERE customer_id = {p} ORDER BY timestamp DESC LIMIT {p};"
+            params = (customer_id, limit)
+        else:
+            sql = f"SELECT * FROM transactions ORDER BY timestamp DESC LIMIT {p};"
+            params = (limit,)
+        with self._get_cursor() as (cur, _, _):
+            cur.execute(sql, params)
+            return [dict(r) for r in cur.fetchall()]
+
+    def reset_demo_data(self, customer_id: str = "CUST_DEMO_001") -> bool:
+        """Safely clean up demonstration records for the specified demo customer and session."""
+        p = "%s" if self.backend == "postgres" else "?"
+        demo_ids = [customer_id, "CUST_001", "CUST_ATTACKER", "cust_test_42"]
+        with self._get_cursor() as (cur, _, _):
+            for cid in demo_ids:
+                cur.execute(f"DELETE FROM fraud_decisions WHERE customer_id = {p};", (cid,))
+                cur.execute(f"DELETE FROM transactions WHERE customer_id = {p};", (cid,))
+                cur.execute(f"DELETE FROM hold_cases WHERE customer_id = {p};", (cid,))
+                cur.execute(f"DELETE FROM fraud_alerts WHERE customer_id = {p};", (cid,))
+                cur.execute(f"DELETE FROM account_security_events WHERE customer_id = {p};", (cid,))
+                cur.execute(f"DELETE FROM security_cases WHERE customer_id = {p};", (cid,))
+            # Also clean test / demo prefixed transaction patterns
+            for prefix in ["tx_atk_%", "tx_gw_%", "tx_demo_%", "tx_live_%", "tx_test_%", "tx_cust_%"]:
+                cur.execute(f"DELETE FROM fraud_decisions WHERE transaction_id LIKE {p};", (prefix,))
+                cur.execute(f"DELETE FROM transactions WHERE transaction_id LIKE {p};", (prefix,))
+                cur.execute(f"DELETE FROM hold_cases WHERE transaction_id LIKE {p};", (prefix,))
+                cur.execute(f"DELETE FROM fraud_alerts WHERE transaction_id LIKE {p};", (prefix,))
+                cur.execute(f"DELETE FROM security_cases WHERE transaction_id LIKE {p};", (prefix,))
+            for prefix in ["CASE-%", "case_%"]:
+                cur.execute(f"DELETE FROM security_cases WHERE case_id LIKE {p};", (prefix,))
+        logger.info("Demo data reset successfully for customer and demo prefixes", customer_id=customer_id)
+        return True
+
+
     def get_labeled_dataset(self, min_timestamp: float = 0.0) -> List[Dict[str, Any]]:
-        """Fetch all records having resolved ground-truth fraud labels for retraining."""
+        """Fetch all records having resolved ground-truth fraud labels for retraining, ordered most recent first."""
         p = "%s" if self.backend == "postgres" else "?"
         sql = f"""
         SELECT * FROM fraud_decisions
         WHERE fraud_label IS NOT NULL AND created_at >= {p}
-        ORDER BY created_at ASC;
+        ORDER BY COALESCE(label_timestamp, updated_at, created_at) DESC;
         """
         with self._get_cursor() as (cur, _, _):
             cur.execute(sql, (min_timestamp,))
@@ -534,7 +761,7 @@ class IdempotentEventSink:
         allowed_tables = {
             "fraud_decisions", "transactions", "hold_cases",
             "fraud_alerts", "account_security_events", "mandates",
-            "replay_evaluation_records"
+            "replay_evaluation_records", "security_cases"
         }
         if table not in allowed_tables:
             raise ValueError(f"Invalid table name: {table}")

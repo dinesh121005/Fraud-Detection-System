@@ -129,6 +129,19 @@ class RedisSlidingWindowEngine:
             current_timestamp=current_timestamp
         )
 
+        # If home_lat/home_lon not explicitly passed, attempt to load from Redis profile
+        if home_lat == 0.0 and home_lon == 0.0:
+            try:
+                prof = self.r.hgetall(f"user:{customer_id}:profile")
+                if prof:
+                    hlat = prof.get(b"home_lat", prof.get("home_lat"))
+                    hlon = prof.get(b"home_lon", prof.get("home_lon"))
+                    if hlat is not None and hlon is not None:
+                        home_lat = float(hlat)
+                        home_lon = float(hlon)
+            except Exception:
+                pass
+
         # 3. Spatial and device metrics
         spatial_dict = compute_spatial_and_device_metrics(
             prior_events=prior_events,
@@ -158,7 +171,9 @@ class RedisSlidingWindowEngine:
         hour: int = 12,
         lat: float = 0.0,
         lon: float = 0.0,
-        device_id: str = "unknown_device"
+        device_id: str = "unknown_device",
+        home_lat: float = 0.0,
+        home_lon: float = 0.0
     ) -> Dict[str, Any]:
         """
         Backward-compatible helper: extracts decision-time state features strictly
@@ -174,6 +189,8 @@ class RedisSlidingWindowEngine:
             current_hour=hour,
             current_lat=lat,
             current_lon=lon,
+            home_lat=home_lat,
+            home_lon=home_lon,
             device_id=device_id
         )
         state["prior_events"] = prior_events
@@ -188,7 +205,9 @@ class RedisSlidingWindowEngine:
             hour=hour,
             lat=lat,
             lon=lon,
-            device_id=device_id
+            device_id=device_id,
+            home_lat=home_lat,
+            home_lon=home_lon
         )
         return state
 
@@ -242,3 +261,29 @@ class RedisSlidingWindowEngine:
                 self.r.hset(prof_key, mapping={"home_lat": home_lat, "home_lon": home_lon})
             except Exception:
                 pass
+
+    def clear_customer_state(self, customer_id: str) -> bool:
+        """Cleanly evict rolling transaction state, profile, and device associations for a customer."""
+        try:
+            self.r.delete(f"user:{customer_id}:txs")
+            self.r.delete(f"user:{customer_id}:profile")
+            self.r.delete(f"user:{customer_id}:devices")
+            return True
+        except Exception:
+            return False
+
+    def remove_transaction(self, customer_id: str, tx_id: str) -> bool:
+        """
+        Evict a blocked/declined fraudulent attempt so it does not contaminate valid customer spending volume.
+        """
+        tx_key = f"user:{customer_id}:txs"
+        try:
+            members = self.r.zrange(tx_key, 0, -1)
+            for m in members:
+                m_str = m.decode("utf-8") if isinstance(m, bytes) else str(m)
+                if f'"{tx_id}"' in m_str:
+                    self.r.zrem(tx_key, m)
+                    return True
+            return False
+        except Exception:
+            return False

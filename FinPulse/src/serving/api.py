@@ -34,7 +34,7 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(
     title="FinPulse AI - Fraud Intelligence Operations API",
-    description="Sub-10ms real-time transaction fraud scoring and explainability engine.",
+    description="Real-time transaction fraud scoring and explainability engine (sub-10ms ML inference, ~25ms warm scoring P50).",
     version="2.0.0",
     lifespan=lifespan
 )

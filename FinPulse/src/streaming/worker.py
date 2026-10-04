@@ -154,10 +154,11 @@ class StreamingFraudWorker:
                 target_in,
                 bootstrap_servers=self.config.bootstrap_servers,
                 value_deserializer=lambda m: json.loads(m.decode("utf-8")),
-                auto_offset_reset="latest",
+                auto_offset_reset="earliest",
                 enable_auto_commit=False,
                 group_id=self.config.consumer.group_id
             )
+            print(f"Streaming worker listening on Kafka topic '{target_in}' at {self.config.bootstrap_servers}...", flush=True)
             logger.info(f"Streaming worker listening on Kafka topic '{target_in}'...")
             for message in consumer:
                 t_consume = time.perf_counter()
@@ -177,11 +178,13 @@ class StreamingFraudWorker:
                     
                     # Commit offset ONLY after successful publish
                     consumer.commit()
-                    logger.info(
+                    log_msg = (
                         f"[{result['decision']}] Tx {result['transaction_id']} -> "
                         f"Risk: {result['risk_score']} ({result['latency_ms']} ms) | "
                         f"Topics: {pub_result['topics']}"
                     )
+                    print(log_msg, flush=True)
+                    logger.info(log_msg)
                 except Exception as ex:
                     record_error("kafka", "runtime_error")
                     self.route_to_dlq(message.value if 'message' in locals() else None, str(ex))
@@ -190,18 +193,29 @@ class StreamingFraudWorker:
             logger.warning(f"Kafka connection not active ({e}). Streaming worker running in test/dry-run mode.")
 
 if __name__ == "__main__":
-    worker = StreamingFraudWorker()
-    sample = {
-        "transaction_id": "test_streaming_01",
-        "timestamp": time.time(),
-        "amount": 25000.0,
-        "customer_id": "cust_stream_99",
-        "merchant_id": "merch_crypto_01",
-        "category": "crypto",
-        "payment_type": "TRANSFER",
-        "origin_balance": 1000.0,
-        "auth_verified": False
-    }
-    res = worker.process_single_transaction(sample)
-    print("\nVerified Streaming Worker Execution:")
-    print(json.dumps(res, indent=2))
+    import argparse
+    parser = argparse.ArgumentParser(description="FinPulse Real-Time Streaming Worker")
+    parser.add_argument("--continuous", action="store_true", help="Run continuous Kafka consumer loop")
+    parser.add_argument("--dry-run", action="store_true", help="Run in dry run mode")
+    args, unknown = parser.parse_known_args()
+
+    worker = StreamingFraudWorker(dry_run=args.dry_run)
+    if args.continuous or os.environ.get("STREAMING_WORKER_CONTINUOUS") == "1":
+        logger.info("FinPulse Streaming Worker starting continuous Kafka ingestion loop...")
+        worker.run_consumer_loop()
+    else:
+        sample = {
+            "transaction_id": "test_streaming_01",
+            "timestamp": time.time(),
+            "amount": 25000.0,
+            "customer_id": "cust_stream_99",
+            "merchant_id": "merch_crypto_01",
+            "category": "crypto",
+            "payment_type": "TRANSFER",
+            "origin_balance": 1000.0,
+            "auth_verified": False
+        }
+        result, event = worker.process_single_transaction(sample)
+        print("\nVerified Streaming Worker Execution:")
+        print(json.dumps(result, indent=2))
+

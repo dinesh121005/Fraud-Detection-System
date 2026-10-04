@@ -231,3 +231,16 @@ class ATOProtectionEngine:
         if assessment.requires_transaction_hold and transaction_amount > 500.0:
             return False, f"Transaction held: High ATO risk score ({assessment.ato_risk_score:.2f}) on amount ${transaction_amount:.2f}"
         return True, None
+
+    def reset(self, customer_id: Optional[str] = None) -> None:
+        """Purge stored security events for clean demo reset."""
+        if customer_id:
+            events = self._history.pop(customer_id, [])
+            for e in events:
+                self._seen_event_ids.discard(e.event_id)
+            logger.info("Reset ATO events for customer", customer_id=customer_id)
+        else:
+            self._history.clear()
+            self._seen_event_ids.clear()
+            logger.info("Reset all ATO security events")
+

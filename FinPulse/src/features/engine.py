@@ -21,7 +21,6 @@ from .transformations import (
     compute_spatial_and_device_metrics
 )
 from .encoders import PAYMENT_TYPE_MAP, FastFrequencyEncoder
-from src.state.sliding_window import RedisSlidingWindowEngine
 from src.state.manager import RedisStateManager, CustomerHistoricalContext
 
 if TYPE_CHECKING:
