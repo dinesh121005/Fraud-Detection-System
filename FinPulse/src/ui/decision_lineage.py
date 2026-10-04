@@ -32,7 +32,7 @@ def render_decision_lineage(result: Any, show_explanation: bool = True):
     ato_col = "#ef4444" if "SUSPEND" in ato_act else ("#f59e0b" if "HOLD" in ato_act else "#10b981")
     gw_col = "#10b981" if gw_dec == "APPROVE" else ("#f59e0b" if gw_dec == "HOLD" else "#ef4444")
 
-    st.markdown(f"""
+    st.html(f"""
     <div style='display: flex; flex-direction: column; gap: 4px; margin: 12px 0;'>
         <!-- Layer 1 -->
         <div class="decision-step-box">
@@ -101,12 +101,13 @@ def render_decision_lineage(result: Any, show_explanation: bool = True):
             </div>
         </div>
     </div>
-    """, unsafe_allow_html=True)
+    """)
 
     if show_explanation and ml_dec == "APPROVE" and gw_dec == "BLOCK":
-        st.markdown("""
+        st.html("""
         <div style='background: rgba(56, 189, 248, 0.08); border-left: 3px solid #38bdf8; border-radius: 6px; padding: 12px 16px; margin-top: 10px; font-size: 0.82rem; color: #cbd5e1; line-height: 1.5;'>
             <b style='color: #38bdf8;'>Why did Layer 1 (ML Model) say APPROVE while Layer 4 (Gateway) decided BLOCK?</b><br>
             The tabular ML model inspects transaction features in isolation. When an attacker crafts a transaction that looks numerically plausible, raw ML alone could be bypassed. FinPulse's <b>4-Layer Architecture</b> caught the behavioral deviation in Layer 2 and intercepted the Account Takeover in Layer 3, commanding the Payment Gateway to block fund movement before any money moved.
         </div>
-        """, unsafe_allow_html=True)
+        """)
+

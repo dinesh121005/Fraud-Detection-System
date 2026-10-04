@@ -2,6 +2,8 @@
 
 **FinPulse** is an institutional-grade, real-time streaming fraud detection platform engineering low-latency hybrid risk classification, explainable machine learning fusion, customer protection workflows, and robust PostgreSQL persistence.
 
+> 📖 **Comprehensive Project Walkthrough**: For an exhaustive, end-to-end walkthrough covering the entire evolution from initial prototype through R1–R7, architecture, subsystems, empirical benchmark evidence, and runbooks, see [PROJECT_WALKTHROUGH.md](file:///d:/Fraud-Detection-System/PROJECT_WALKTHROUGH.md).
+
 ---
 
 ## 1. System Architecture Overview
